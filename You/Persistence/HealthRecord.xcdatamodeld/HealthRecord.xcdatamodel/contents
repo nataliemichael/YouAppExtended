@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788" systemVersion="25A5306g" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="StoredFollowUpTask" representedClassName="StoredFollowUpTask" syncable="YES" codeGenerationType="class">
+        <attribute name="completedOn" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="detail" optional="YES" attributeType="String"/>
+        <attribute name="dueOn" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="referral" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="StoredReferral" inverseName="followUpTasks" inverseEntity="StoredReferral"/>
+    </entity>
+    <entity name="StoredMarkerReading" representedClassName="StoredMarkerReading" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="markerName" optional="YES" attributeType="String"/>
+        <attribute name="plainLanguageExplanation" optional="YES" attributeType="String"/>
+        <attribute name="rangeLowerBound" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="rangeUpperBound" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="unit" optional="YES" attributeType="String"/>
+        <attribute name="value" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="result" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="StoredPathologyResult" inverseName="markers" inverseEntity="StoredPathologyResult"/>
+    </entity>
+    <entity name="StoredPathologyResult" representedClassName="StoredPathologyResult" syncable="YES" codeGenerationType="class">
+        <attribute name="collectedOn" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="orderingClinician" optional="YES" attributeType="String"/>
+        <relationship name="markers" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="StoredMarkerReading" inverseName="result" inverseEntity="StoredMarkerReading"/>
+    </entity>
+    <entity name="StoredReferral" representedClassName="StoredReferral" syncable="YES" codeGenerationType="class">
+        <attribute name="expiresOn" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="issuedBy" optional="YES" attributeType="String"/>
+        <attribute name="issuedOn" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="kind" optional="YES" attributeType="String"/>
+        <attribute name="purpose" optional="YES" attributeType="String"/>
+        <relationship name="followUpTasks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="StoredFollowUpTask" inverseName="referral" inverseEntity="StoredFollowUpTask"/>
+    </entity>
+</model>
