@@ -184,7 +184,7 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
 
     // MARK: - Mapping stored entities to domain structs
 
-    private static func result(from stored: StoredPathologyResult) -> PathologyResult? {
+    nonisolated private static func result(from stored: StoredPathologyResult) -> PathologyResult? {
         guard let id = stored.id, let collectedOn = stored.collectedOn else { return nil }
         let readings = (stored.markers as? Set<StoredMarkerReading> ?? [])
             .compactMap(reading(from:))
@@ -197,7 +197,7 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
         )
     }
 
-    private static func reading(from stored: StoredMarkerReading) -> MarkerReading? {
+    nonisolated private static func reading(from stored: StoredMarkerReading) -> MarkerReading? {
         guard let id = stored.id, let markerName = stored.markerName else { return nil }
         return MarkerReading(
             id: id,
@@ -212,7 +212,7 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
         )
     }
 
-    private static func referral(from stored: StoredReferral) -> Referral? {
+    nonisolated private static func referral(from stored: StoredReferral) -> Referral? {
         guard let id = stored.id,
               let kind = Referral.Kind(rawValue: stored.kind ?? ""),
               let issuedOn = stored.issuedOn,
@@ -227,7 +227,7 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
         )
     }
 
-    private static func task(from stored: StoredFollowUpTask) -> FollowUpTask? {
+    nonisolated private static func task(from stored: StoredFollowUpTask) -> FollowUpTask? {
         guard let id = stored.id, let dueOn = stored.dueOn else { return nil }
         return FollowUpTask(
             id: id,
