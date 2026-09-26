@@ -5,8 +5,9 @@
 
 import Foundation
 
-/// A health record store Data lasts until the app closes. The unit tests need a store they can set up in a known state instantly, and allows me to build and test all three use cases without touching file storage.
-/// 
+/// A health record store that lasts until the app closes. The unit tests need a
+/// store they can set up in a known state instantly, so this is the mock every
+/// use case and ViewModel test runs against. Previews use it too.
 final class InMemoryHealthRecordRepository: HealthRecordRepository {
     private(set) var results: [PathologyResult]
     private(set) var referrals: [Referral]
@@ -37,5 +38,33 @@ final class InMemoryHealthRecordRepository: HealthRecordRepository {
     func update(_ task: FollowUpTask) {
         guard let index = followUpTasks.firstIndex(where: { $0.id == task.id }) else { return }
         followUpTasks[index] = task
+    }
+
+    func delete(_ result: PathologyResult) {
+        results.removeAll { $0.id == result.id }
+    }
+
+    // MARK: - Domain queries
+    // Plain Swift filters that must match the Core Data predicates exactly.
+
+    func followUpTasksDue(withinDays days: Int, on date: Date) -> [FollowUpTask] {
+        let cutoff = Calendar.current.date(byAdding: .day, value: days, to: date) ?? date
+        return followUpTasks
+            .filter { !$0.isCompleted && $0.dueOn <= cutoff }
+            .sorted { $0.dueOn < $1.dueOn }
+    }
+
+    func referralsExpiring(withinDays days: Int, on date: Date) -> [Referral] {
+        let today = Calendar.current.startOfDay(for: date)
+        let cutoff = Calendar.current.date(byAdding: .day, value: days, to: date) ?? date
+        return referrals
+            .filter { $0.expiresOn >= today && $0.expiresOn <= cutoff }
+            .sorted { $0.expiresOn < $1.expiresOn }
+    }
+
+    func flaggedReadings(since: Date) -> [MarkerReading] {
+        results
+            .filter { $0.collectedOn >= since }
+            .flatMap(\.flaggedMarkers)
     }
 }

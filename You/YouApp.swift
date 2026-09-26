@@ -10,9 +10,9 @@ import SwiftUI
 @main
 struct YouApp: App {
     /// The patient's one record store, shared by every screen.
-    /// The JSON-backed store keeps records on the device between launches;
-    /// swapping storage technology only ever changes this line.
-    private let repository: HealthRecordRepository = JSONHealthRecordRepository()
+    /// Core Data keeps records on the device between launches, in the App Group
+    /// so the widget can read them; swapping storage technology only ever changes this line.
+    private let repository: HealthRecordRepository = CoreDataHealthRecordRepository()
 
     var body: some Scene {
         WindowGroup {
