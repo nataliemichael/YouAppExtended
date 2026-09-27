@@ -65,6 +65,14 @@ final class InMemoryHealthRecordRepository: HealthRecordRepository {
     func flaggedReadings(since: Date) -> [MarkerReading] {
         results
             .filter { $0.collectedOn >= since }
+            .sorted { $0.collectedOn > $1.collectedOn }
             .flatMap(\.flaggedMarkers)
+    }
+
+    func readingHistory(forMarker markerName: String) -> [MarkerReading] {
+        results
+            .sorted { $0.collectedOn < $1.collectedOn }
+            .flatMap(\.markers)
+            .filter { $0.markerName.compare(markerName, options: .caseInsensitive) == .orderedSame }
     }
 }

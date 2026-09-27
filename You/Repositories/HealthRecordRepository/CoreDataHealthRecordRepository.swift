@@ -133,6 +133,13 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
         return fetch(request).compactMap(Self.reading(from:))
     }
 
+    func readingHistory(forMarker markerName: String) -> [MarkerReading] {
+        let request = StoredMarkerReading.fetchRequest()
+        request.predicate = NSPredicate(format: "markerName ==[c] %@", markerName)  // [c] ignores case
+        request.sortDescriptors = [NSSortDescriptor(key: "result.collectedOn", ascending: true)]
+        return fetch(request).compactMap(Self.reading(from:))
+    }
+
     // MARK: - Helpers
 
     private func fetch<T: NSManagedObject>(_ request: NSFetchRequest<T>) -> [T] {

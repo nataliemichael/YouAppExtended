@@ -38,6 +38,11 @@ protocol HealthRecordRepository {
     func referralsExpiring(withinDays days: Int, on date: Date) -> [Referral]
 
     /// "Which results should I raise with my GP?" Readings outside their healthy
-    /// range from reports collected on or after `since`.
+    /// range from reports collected on or after `since`, newest first.
     func flaggedReadings(since: Date) -> [MarkerReading]
+
+    /// "Is this getting better?" Every reading of one marker across all reports,
+    /// oldest first so a trend reads left to right. Marker names match regardless
+    /// of case, since the patient types them in from the report.
+    func readingHistory(forMarker markerName: String) -> [MarkerReading]
 }
