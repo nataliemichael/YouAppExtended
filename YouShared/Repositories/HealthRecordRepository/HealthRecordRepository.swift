@@ -46,3 +46,15 @@ protocol HealthRecordRepository {
     /// of case, since the patient types them in from the report.
     func readingHistory(forMarker markerName: String) -> [MarkerReading]
 }
+
+extension HealthRecordRepository {
+    /// "What's coming up in my care?" Referrals to use and follow-ups to do within
+    /// the window, soonest first. Overdue tasks stay on the list, expired referrals
+    /// drop off because they can no longer be used. Shared by the Home screen and
+    /// the Coming up widget so both always agree.
+    func careSchedule(withinDays days: Int, on date: Date = Date()) -> [PatientActionable] {
+        let items: [PatientActionable] =
+            referralsExpiring(withinDays: days, on: date) + followUpTasksDue(withinDays: days, on: date)
+        return items.sorted { $0.actBy < $1.actBy }
+    }
+}

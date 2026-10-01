@@ -2,15 +2,14 @@
 //  YouWidgetBundle.swift
 //  YouWidget
 //
-//  Created by Natalie Michael on 29/9/2026.
-//
 
 import WidgetKit
 import SwiftUI
 
+/// Every widget You offers. One for now: the patient's care schedule.
 @main
 struct YouWidgetBundle: WidgetBundle {
     var body: some Widget {
-        YouWidget()
+        ComingUpWidget()
     }
 }

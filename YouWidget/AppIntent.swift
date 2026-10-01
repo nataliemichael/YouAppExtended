@@ -2,17 +2,42 @@
 //  AppIntent.swift
 //  YouWidget
 //
-//  Created by Natalie Michael on 29/9/2026.
-//
 
 import WidgetKit
 import AppIntents
 
-struct ConfigurationAppIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource { "Configuration" }
-    static var description: IntentDescription { "This is an example widget." }
+/// How far ahead the Coming up widget looks. A patient in a busy month wants
+/// this week only; someone between check-ups wants the whole month.
+enum LookAheadWindow: String, AppEnum {
+    case week
+    case fortnight
+    case month
 
-    // An example configurable parameter.
-    @Parameter(title: "Favorite Emoji", default: "😃")
-    var favoriteEmoji: String
+    static var typeDisplayRepresentation: TypeDisplayRepresentation { "Look ahead" }
+
+    static var caseDisplayRepresentations: [LookAheadWindow: DisplayRepresentation] {
+        [
+            .week: "Next 7 days",
+            .fortnight: "Next 14 days",
+            .month: "Next 30 days"
+        ]
+    }
+
+    /// The window in days, the unit the repository queries speak.
+    var days: Int {
+        switch self {
+        case .week: return 7
+        case .fortnight: return 14
+        case .month: return 30
+        }
+    }
+}
+
+/// The one thing the patient can change on the widget: the window it looks ahead.
+struct ComingUpConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource { "Coming up" }
+    static var description: IntentDescription { "Choose how far ahead to show referrals to use and follow-ups to do." }
+
+    @Parameter(title: "Look ahead", default: .fortnight)
+    var window: LookAheadWindow
 }
