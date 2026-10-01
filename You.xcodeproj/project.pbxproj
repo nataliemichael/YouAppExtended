@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		AA9C32793051047600C81F9D /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = AA9C32783051047600C81F9D /* Lottie */; };
+		AADA207B306B8B2E00B64722 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADA207A306B8B2E00B64722 /* WidgetKit.framework */; };
+		AADA207D306B8B2E00B64722 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AADA207C306B8B2E00B64722 /* SwiftUI.framework */; };
+		AADA208A306B8B2F00B64722 /* YouWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AADA2078306B8B2E00B64722 /* YouWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,18 +28,58 @@
 			remoteGlobalIDString = AA10BC363045470E00C825D5;
 			remoteInfo = You;
 		};
+		AADA2088306B8B2F00B64722 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA10BC2F3045470E00C825D5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AADA2077306B8B2E00B64722;
+			remoteInfo = YouWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AADA208B306B8B2F00B64722 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AADA208A306B8B2F00B64722 /* YouWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AA10BC373045470E00C825D5 /* You.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = You.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA10BC443045470F00C825D5 /* YouTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YouTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA10BC4E3045470F00C825D5 /* YouUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YouUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AADA2078306B8B2E00B64722 /* YouWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = YouWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AADA207A306B8B2E00B64722 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		AADA207C306B8B2E00B64722 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		AADA2090306B8B8000B64722 /* YouWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = YouWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AADA208E306B8B2F00B64722 /* Exceptions for "YouWidget" folder in "YouWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AADA2077306B8B2E00B64722 /* YouWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AA10BC393045470E00C825D5 /* You */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = You;
+			sourceTree = "<group>";
+		};
+		AA5A4E5D306C000000B64722 /* YouShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = YouShared;
 			sourceTree = "<group>";
 		};
 		AA10BC473045470F00C825D5 /* YouTests */ = {
@@ -47,6 +90,14 @@
 		AA10BC513045470F00C825D5 /* YouUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = YouUITests;
+			sourceTree = "<group>";
+		};
+		AADA207E306B8B2E00B64722 /* YouWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AADA208E306B8B2F00B64722 /* Exceptions for "YouWidget" folder in "YouWidgetExtension" target */,
+			);
+			path = YouWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -74,15 +125,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AADA2075306B8B2E00B64722 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AADA207D306B8B2E00B64722 /* SwiftUI.framework in Frameworks */,
+				AADA207B306B8B2E00B64722 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		AA10BC2E3045470E00C825D5 = {
 			isa = PBXGroup;
 			children = (
+				AADA2090306B8B8000B64722 /* YouWidgetExtension.entitlements */,
 				AA10BC393045470E00C825D5 /* You */,
+				AA5A4E5D306C000000B64722 /* YouShared */,
 				AA10BC473045470F00C825D5 /* YouTests */,
 				AA10BC513045470F00C825D5 /* YouUITests */,
+				AADA207E306B8B2E00B64722 /* YouWidget */,
+				AADA2079306B8B2E00B64722 /* Frameworks */,
 				AA10BC383045470E00C825D5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,8 +157,18 @@
 				AA10BC373045470E00C825D5 /* You.app */,
 				AA10BC443045470F00C825D5 /* YouTests.xctest */,
 				AA10BC4E3045470F00C825D5 /* YouUITests.xctest */,
+				AADA2078306B8B2E00B64722 /* YouWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		AADA2079306B8B2E00B64722 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AADA207A306B8B2E00B64722 /* WidgetKit.framework */,
+				AADA207C306B8B2E00B64722 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -107,13 +181,16 @@
 				AA10BC333045470E00C825D5 /* Sources */,
 				AA10BC343045470E00C825D5 /* Frameworks */,
 				AA10BC353045470E00C825D5 /* Resources */,
+				AADA208B306B8B2F00B64722 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AADA2089306B8B2F00B64722 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AA10BC393045470E00C825D5 /* You */,
+				AA5A4E5D306C000000B64722 /* YouShared */,
 			);
 			name = You;
 			packageProductDependencies = (
@@ -169,6 +246,29 @@
 			productReference = AA10BC4E3045470F00C825D5 /* YouUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		AADA2077306B8B2E00B64722 /* YouWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AADA208F306B8B2F00B64722 /* Build configuration list for PBXNativeTarget "YouWidgetExtension" */;
+			buildPhases = (
+				AADA2074306B8B2E00B64722 /* Sources */,
+				AADA2075306B8B2E00B64722 /* Frameworks */,
+				AADA2076306B8B2E00B64722 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AADA207E306B8B2E00B64722 /* YouWidget */,
+				AA5A4E5D306C000000B64722 /* YouShared */,
+			);
+			name = YouWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = YouWidgetExtension;
+			productReference = AADA2078306B8B2E00B64722 /* YouWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -176,7 +276,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2660;
+				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					AA10BC363045470E00C825D5 = {
@@ -189,6 +289,9 @@
 					AA10BC4D3045470F00C825D5 = {
 						CreatedOnToolsVersion = 26.6;
 						TestTargetID = AA10BC363045470E00C825D5;
+					};
+					AADA2077306B8B2E00B64722 = {
+						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -212,6 +315,7 @@
 				AA10BC363045470E00C825D5 /* You */,
 				AA10BC433045470F00C825D5 /* YouTests */,
 				AA10BC4D3045470F00C825D5 /* YouUITests */,
+				AADA2077306B8B2E00B64722 /* YouWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -232,6 +336,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AA10BC4C3045470F00C825D5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AADA2076306B8B2E00B64722 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -262,6 +373,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AADA2074306B8B2E00B64722 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -274,6 +392,11 @@
 			isa = PBXTargetDependency;
 			target = AA10BC363045470E00C825D5 /* You */;
 			targetProxy = AA10BC4F3045470F00C825D5 /* PBXContainerItemProxy */;
+		};
+		AADA2089306B8B2F00B64722 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AADA2077306B8B2E00B64722 /* YouWidgetExtension */;
+			targetProxy = AADA2088306B8B2F00B64722 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -545,6 +668,70 @@
 			};
 			name = Release;
 		};
+		AADA208C306B8B2F00B64722 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = YouWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = YouWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = YouWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nootnoot.You.YouWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AADA208D306B8B2F00B64722 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = YouWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = YouWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = YouWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nootnoot.You.YouWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -580,6 +767,15 @@
 			buildConfigurations = (
 				AA10BC5F3045470F00C825D5 /* Debug */,
 				AA10BC603045470F00C825D5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AADA208F306B8B2F00B64722 /* Build configuration list for PBXNativeTarget "YouWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AADA208C306B8B2F00B64722 /* Debug */,
+				AADA208D306B8B2F00B64722 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

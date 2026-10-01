@@ -4,6 +4,7 @@
 //
 
 import CoreData
+import WidgetKit
 
 /// The patient's health record store backed by Core Data, saved in the App Group
 /// container so records survive relaunch and the widget can read them.
@@ -20,9 +21,11 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
     private let store: HealthRecordStore
     private var context: NSManagedObjectContext { store.context }
 
-    init(store: HealthRecordStore = HealthRecordStore()) {
+    /// The main app seeds sample records on first launch. The widget passes
+    /// `seedsSampleRecords: false` because it only ever reads.
+    init(store: HealthRecordStore = HealthRecordStore(), seedsSampleRecords: Bool = true) {
         self.store = store
-        seedIfEmpty()
+        if seedsSampleRecords { seedIfEmpty() }
     }
 
     // MARK: - Reading
@@ -150,6 +153,9 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
         guard context.hasChanges else { return }
         do {
             try context.save()
+            // Every relevant data change ends here, so this is where the main app
+            // tells the Coming up widget to redraw from the shared store.
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             context.rollback()
             print("Failed to save health record: \(error)")
