@@ -126,6 +126,49 @@ struct ReadReportPhotoUseCaseTests {
         #expect(read.valueText == "8")
     }
 
+    // MARK: - Table-style reports
+
+    @Test func test_readReport_readsValueAndRange_fromColumnsBeneathTheMarker() throws {
+        // A table read column by column, as the camera returns it: the marker's
+        // name has no number beside it, the value and range come on later lines.
+        // The American spelling is matched through the Hb alias.
+        let lines = [
+            "HEMOGLOBIN (HB)",
+            "Unit", "Result", "Reference Value",
+            "Low 13.5-17.5",
+            "Hemoglobin (Hb)",
+            "12.5",
+            "g/dL",
+            "Comment:",
+            "Normal Range",
+            "13.5-17.5"
+        ]
+
+        let read = try useCase.execute(marker: marker("Haemoglobin"), recognisedLines: lines)
+
+        #expect(read.valueText == "12.5")
+        #expect(read.rangeLowText == "13.5")
+        #expect(read.rangeHighText == "17.5")
+    }
+
+    @Test func test_readReport_stopsAtTheNextMarker_whenReadingColumns() {
+        // Ferritin's columns are empty, the next marker's numbers must not be borrowed.
+        let lines = ["Ferritin", "µg/L", "Haemoglobin 138 g/L (115-165)"]
+
+        #expect(throws: ReadReportPhotoError.valueNotReadable(markerName: "Ferritin")) {
+            try useCase.execute(marker: marker("Ferritin"), recognisedLines: lines)
+        }
+    }
+
+    @Test func test_readReport_ignoresPhoneNumbersAndLabIDs() throws {
+        let lines = ["Ferritin", "Ph 0123456789", "Lab ID 44079700", "9", "(30-300)"]
+
+        let read = try useCase.execute(marker: marker("Ferritin"), recognisedLines: lines)
+
+        #expect(read.valueText == "9")
+        #expect(read.rangeLowText == "30")
+    }
+
     // MARK: - Domain errors
 
     @Test func test_readReport_fails_whenPhotoHasNoText() {

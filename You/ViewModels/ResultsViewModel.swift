@@ -5,10 +5,11 @@
 
 import Foundation
 import Combine
+import UIKit
 
 /// Connects the results screens to the record store and the recording use case.
-/// Screens read `results`, ask `record(...)` to save, and show `errorMessage` when
-/// something is refused.
+/// Screens read `results`, ask `record(...)` to save, ask `readReport(...)` to lift
+/// a value off a photo, and show `errorMessage` when something is refused.
 @MainActor
 final class ResultsViewModel: ObservableObject {
     @Published private(set) var results: [PathologyResult] = []
@@ -16,10 +17,14 @@ final class ResultsViewModel: ObservableObject {
 
     private let repository: HealthRecordRepository
     private let recordResult: RecordPathologyResultUseCase
+    private let readReportPhoto = ReadReportPhotoUseCase()
+    private let textReader: ReportTextReading
 
-    init(repository: HealthRecordRepository) {
+    /// The app passes the Vision reader. Tests pass one that answers with fixed lines.
+    init(repository: HealthRecordRepository, textReader: ReportTextReading = VisionReportTextReader()) {
         self.repository = repository
         self.recordResult = RecordPathologyResultUseCase(repository: repository)
+        self.textReader = textReader
         load()
     }
 
@@ -61,5 +66,21 @@ final class ResultsViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             return false
         }
+    }
+
+    /// Reads one marker's value and healthy range off a photo of the report.
+    /// Returns what was read, or nil when it couldn't, in which case `errorMessage`
+    /// says why in the patient's words. Nothing is saved, the form fills in and the
+    /// patient still confirms against the paper.
+    func readReport(for marker: KnownMarker, from photo: UIImage) async -> ReportLine? {
+        do {
+            let lines = try await textReader.lines(in: photo)
+            return try readReportPhoto.execute(marker: marker, recognisedLines: lines)
+        } catch let error as ReadReportPhotoError {
+            errorMessage = error.localizedDescription
+        } catch {
+            errorMessage = "We couldn't read that photo. Try another one, or type the result in from the paper."
+        }
+        return nil
     }
 }

@@ -40,9 +40,15 @@ enum ReadReportPhotoError: LocalizedError, Equatable {
 ///    whole word. Longer matches win, so "LDL cholesterol" is never read as total
 ///    cholesterol.
 /// 3. The first number after the marker's name is the value. The next two are the
-///    healthy range. Labs sometimes print the range on the line beneath, so a bare
-///    pair of numbers there counts too.
-/// 4. Units are ignored even when they contain digits, like x10⁹/L.
+///    healthy range.
+/// 4. Table-style reports print the value and range in their own columns, which the
+///    camera reads as separate lines beneath the marker's name. When the marker's
+///    line has no number, the first line beneath holding a single number is the
+///    value and the first holding a pair is the range. The search stops at the next
+///    marker's line, or after a few lines, so numbers elsewhere on the page are
+///    never picked up.
+/// 5. Units are ignored even when they contain digits, like x10⁹/L, and so are long
+///    numbers such as phone numbers and lab IDs, which are never results.
 struct ReadReportPhotoUseCase {
 
     /// Finds the marker on the page and returns what was printed beside it.
@@ -61,15 +67,21 @@ struct ReadReportPhotoUseCase {
                   let printed = marker.printedRange(in: line) else { continue }
             markerSeen = true
 
-            let numbers = Self.numbers(in: String(line[printed.upperBound...]))
-            guard let value = numbers.first else { continue }  // a heading like "Iron studies", keep looking
+            let onLine = Self.numbers(in: String(line[printed.upperBound...]))
+            let beneath = Self.columns(beneath: index, in: lines)
 
+            var value = onLine.first
             var range: (low: String, high: String)? = nil
-            if numbers.count >= 3 {
-                range = (numbers[1], numbers[2])
-            } else if index + 1 < lines.count {
-                range = Self.bareRange(on: lines[index + 1])
+            if onLine.count >= 3 {
+                range = (onLine[1], onLine[2])
+            } else if onLine.isEmpty {
+                value = beneath.value  // the value sits in its own column
+                range = beneath.range
+            } else if onLine.count == 1 {
+                range = beneath.range  // value on the line, range printed under it
             }
+
+            guard let value else { continue }  // a heading like "Iron studies", keep looking
 
             return ReportLine(
                 valueText: value,
@@ -86,6 +98,13 @@ struct ReadReportPhotoUseCase {
 
     // MARK: - Helpers
 
+    /// How many lines beneath a marker's name count as its columns.
+    static let columnLookahead = 8
+
+    /// A result is never this many digits long, so anything longer is a phone
+    /// number, a date or a lab ID and is skipped.
+    private static let longestResultLength = 7
+
     private static let numberPattern = try! NSRegularExpression(pattern: #"\d+(?:\.\d+)?"#)
 
     /// Every number in the text, in order, with units dropped first so the 9 in
@@ -100,17 +119,24 @@ struct ReadReportPhotoUseCase {
             .joined(separator: " ")
 
         let whole = NSRange(withoutUnits.startIndex..., in: withoutUnits)
-        return numberPattern.matches(in: withoutUnits, range: whole).compactMap {
-            Range($0.range, in: withoutUnits).map { String(withoutUnits[$0]) }
-        }
+        return numberPattern.matches(in: withoutUnits, range: whole)
+            .compactMap { Range($0.range, in: withoutUnits).map { String(withoutUnits[$0]) } }
+            .filter { $0.count <= longestResultLength }
     }
 
-    /// A line that is nothing but a healthy range, e.g. "(30-300)" printed under
-    /// the marker. Lines that name another marker never count.
-    private static func bareRange(on line: String) -> (low: String, high: String)? {
-        guard KnownMarker.printed(on: line) == nil else { return nil }
-        let numbers = numbers(in: line)
-        guard numbers.count == 2 else { return nil }
-        return (numbers[0], numbers[1])
+    /// The value and range printed in their own columns under a marker's name:
+    /// the first line holding one number, and the first holding a pair. Stops at
+    /// the next marker's line or after `columnLookahead` lines.
+    private static func columns(beneath index: Int, in lines: [String]) -> (value: String?, range: (low: String, high: String)?) {
+        var value: String?
+        var range: (low: String, high: String)?
+        for line in lines.dropFirst(index + 1).prefix(columnLookahead) {
+            if KnownMarker.printed(on: line) != nil { break }
+            let numbers = numbers(in: line)
+            if numbers.count == 1, value == nil { value = numbers[0] }
+            if numbers.count == 2, range == nil { range = (numbers[0], numbers[1]) }
+            if value != nil, range != nil { break }
+        }
+        return (value, range)
     }
 }
