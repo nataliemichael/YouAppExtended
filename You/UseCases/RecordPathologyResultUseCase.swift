@@ -103,16 +103,9 @@ struct RecordPathologyResultUseCase {
         return result
     }
 
-    /// Everyday-words explanations for markers the app knows, with an honest
-    /// fallback for ones it doesn't. Educational only, never medical advice.
+    /// Everyday-words explanation from the marker catalogue, with an honest
+    /// fallback for markers the app doesn't know. Educational only, never medical advice.
     private static func explanation(for markerName: String) -> String {
-        let glossary: [String: String] = [
-            "ferritin": "Ferritin shows how much iron your body has stored. Low iron stores are a common reason for feeling tired or short of breath.",
-            "haemoglobin": "Haemoglobin is the part of your red blood cells that carries oxygen around your body.",
-            "vitamin d": "Vitamin D helps your body absorb calcium and keep bones and muscles strong. Most of it comes from sunlight.",
-            "tsh": "TSH tells your thyroid how hard to work. It is a common check when energy levels feel off."
-        ]
-        return glossary[markerName.lowercased()]
-            ?? "Your GP can explain what this marker measures and what your value means for you."
+        KnownMarker.explanation(for: markerName)
     }
 }
