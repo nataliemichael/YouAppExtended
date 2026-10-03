@@ -37,25 +37,40 @@ struct HomeView: View {
         NavigationStack {
             List {
                 Section {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 14) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        // The brand heading with the waving figure beside it.
+                        HStack(alignment: .center, spacing: 8) {
+                            VStack(alignment: .leading, spacing: -4) {
+                                Text("Hey")
+                                    .font(BrandFonts.handwriting(size: 30))
+                                    .foregroundStyle(AppColours.ink)
+                                    .padding(.leading, 4)
+                                Text("You.")
+                                    .brandTitle(size: 56)
+                            }
+                            .accessibilityElement(children: .combine)
                             LottieView(animation: .named("Waving"))
                                 .looping()
-                                .frame(width: 116, height: 100)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(greeting)
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                Text(patientFirstName.isEmpty
-                                    ? "Tap here to tell us your name."
-                                    : "Here's where your health is at today.")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .onTapGesture {
-                                nameDraft = patientFirstName
-                                isEditingName = true
-                            }
+                                .frame(width: 130, height: 112)
+                            Spacer(minLength: 0)
+                        }
+
+                        // The greeting, tappable to set the patient's name.
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(greeting)
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundStyle(AppColours.ink)
+                            Text(patientFirstName.isEmpty
+                                ? "Tap here to tell us your name."
+                                : "Here's where your health is at today.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            nameDraft = patientFirstName
+                            isEditingName = true
                         }
                     }
                     .listRowBackground(Color.clear)
@@ -69,7 +84,7 @@ struct HomeView: View {
                                 Text("Next: \(next.patientAction), by \(next.actBy.formatted(date: .abbreviated, time: .omitted))")
                             } icon: {
                                 Image(systemName: "arrow.forward.circle.fill")
-                                    .foregroundStyle(AppColours.teal)
+                                    .foregroundStyle(AppColours.ink)
                             }
                         }
                         ForEach(attentionMarkers) { reading in
@@ -77,7 +92,7 @@ struct HomeView: View {
                                 Text("\(reading.markerName) is outside the healthy range")
                             } icon: {
                                 Image(systemName: "exclamationmark.circle.fill")
-                                    .foregroundStyle(AppColours.coral)
+                                    .foregroundStyle(AppColours.warning)
                             }
                         }
                         if openTaskCount > 0 {
@@ -87,7 +102,7 @@ struct HomeView: View {
                                     : "\(openTaskCount) tasks waiting in Follow-ups")
                             } icon: {
                                 Image(systemName: "checklist")
-                                    .foregroundStyle(AppColours.teal)
+                                    .foregroundStyle(AppColours.ink)
                             }
                         }
                     }
@@ -101,7 +116,7 @@ struct HomeView: View {
                                     .font(.headline)
                                 Text(summaryLine(for: result))
                                     .font(.subheadline)
-                                    .foregroundStyle(result.flaggedMarkers.isEmpty ? Color.secondary : AppColours.coral)
+                                    .foregroundStyle(result.flaggedMarkers.isEmpty ? Color.secondary : AppColours.warning)
                             }
                         }
                     }
@@ -130,19 +145,10 @@ struct HomeView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
-            .background(AppColours.paleTeal)
+            .background(AppColours.sand)
             .contentMargins(.top, 0, for: .scrollContent)
             .navigationDestination(for: PathologyResult.self) { result in
                 ResultDetailView(result: result)
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Text("You.")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .fixedSize(horizontal: true, vertical: false)
-                }
-                .sharedBackgroundVisibility(.hidden)
             }
             .sheet(isPresented: $isAddingResult) {
                 RecordResultView(viewModel: resultsViewModel)

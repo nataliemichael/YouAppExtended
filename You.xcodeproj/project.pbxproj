@@ -77,11 +77,6 @@
 			path = You;
 			sourceTree = "<group>";
 		};
-		AA5A4E5D306C000000B64722 /* YouShared */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = YouShared;
-			sourceTree = "<group>";
-		};
 		AA10BC473045470F00C825D5 /* YouTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = YouTests;
@@ -90,6 +85,11 @@
 		AA10BC513045470F00C825D5 /* YouUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = YouUITests;
+			sourceTree = "<group>";
+		};
+		AA5A4E5D306C000000B64722 /* YouShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = YouShared;
 			sourceTree = "<group>";
 		};
 		AADA207E306B8B2E00B64722 /* YouWidget */ = {
@@ -259,8 +259,8 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AADA207E306B8B2E00B64722 /* YouWidget */,
 				AA5A4E5D306C000000B64722 /* YouShared */,
+				AADA207E306B8B2E00B64722 /* YouWidget */,
 			);
 			name = YouWidgetExtension;
 			packageProductDependencies = (

@@ -25,7 +25,7 @@ struct ReferenceRangeBar: View {
     }
 
     private var dotColour: Color {
-        reading.isFlagged ? AppColours.coral : .green
+        reading.isFlagged ? AppColours.warning : AppColours.done
     }
 
     var body: some View {
@@ -36,11 +36,11 @@ struct ReferenceRangeBar: View {
 
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color(.systemGray5))
+                    .fill(AppColours.stone.opacity(0.35))
                     .frame(height: 8)
 
                 Capsule()
-                    .fill(Color.green.opacity(0.3))
+                    .fill(AppColours.done.opacity(0.35))
                     .frame(width: rangeEnd - rangeStart, height: 8)
                     .offset(x: rangeStart)
 

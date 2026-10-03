@@ -14,6 +14,10 @@ struct YouApp: App {
     /// so the widget can read them; swapping storage technology only ever changes this line.
     private let repository: HealthRecordRepository = CoreDataHealthRecordRepository()
 
+    init() {
+        BrandFonts.register()  // the handwritten "Hey" on Home
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView(repository: repository)

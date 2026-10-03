@@ -49,7 +49,7 @@ struct AddReferralView: View {
             .navigationTitle("Track a referral")
             .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
-            .background(AppColours.paleTeal)
+            .background(AppColours.sand)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
