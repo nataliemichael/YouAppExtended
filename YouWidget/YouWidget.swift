@@ -179,7 +179,7 @@ struct ComingUpWidgetView: View {
         Label("Coming up", systemImage: "calendar")
             .font(.footnote)
             .fontWeight(.bold)
-            .foregroundStyle(AppColours.teal)
+            .foregroundStyle(AppColours.ink)
     }
 
     /// "3 days" in a soft pill, coral when urgent.
@@ -202,7 +202,7 @@ struct ComingUpWidgetView: View {
             )
             .font(.caption2)
             .fontWeight(.semibold)
-            .foregroundStyle(AppColours.coral)
+            .foregroundStyle(AppColours.warning)
         }
     }
 
@@ -213,7 +213,7 @@ struct ComingUpWidgetView: View {
     }
 
     private func tint(for line: ScheduleLine) -> Color {
-        line.isUrgent ? AppColours.coral : AppColours.teal
+        line.isUrgent ? AppColours.warning : AppColours.ink
     }
 
     private var nothingDueText: String {
@@ -232,7 +232,7 @@ struct ComingUpWidget: Widget {
                 .environment(\.colorScheme, .light)  // brand background is pale, keep text dark
                 .containerBackground(for: .widget) {
                     LinearGradient(
-                        colors: [.white, AppColours.paleTeal],
+                        colors: [AppColours.sandLight, AppColours.sand],
                         startPoint: .top,
                         endPoint: .bottom
                     )

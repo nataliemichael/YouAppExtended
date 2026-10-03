@@ -30,7 +30,7 @@ struct ResultDetailView: View {
                         Spacer()
                         Text("\(reading.value.formatted()) \(reading.unit)")
                             .font(.headline)
-                            .foregroundStyle(reading.isFlagged ? AppColours.coral : Color.primary)
+                            .foregroundStyle(reading.isFlagged ? AppColours.warning : Color.primary)
                     }
 
                     ReferenceRangeBar(reading: reading)
@@ -38,7 +38,7 @@ struct ResultDetailView: View {
 
                     Text(statusLine(for: reading))
                         .font(.subheadline)
-                        .foregroundStyle(reading.isFlagged ? AppColours.coral : Color.secondary)
+                        .foregroundStyle(reading.isFlagged ? AppColours.warning : Color.secondary)
 
                     Text(reading.plainLanguageExplanation)
                         .font(.subheadline)
@@ -55,7 +55,7 @@ struct ResultDetailView: View {
         .navigationTitle("Your results")
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
-        .background(AppColours.paleTeal)
+        .background(AppColours.sand)
     }
 
     private func statusLine(for reading: MarkerReading) -> String {

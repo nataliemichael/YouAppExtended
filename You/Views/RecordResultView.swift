@@ -63,7 +63,7 @@ struct RecordResultView: View {
             .navigationTitle("Add a result")
             .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
-            .background(AppColours.paleTeal)
+            .background(AppColours.sand)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark") { dismiss() }
