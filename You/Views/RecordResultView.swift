@@ -17,6 +17,12 @@ import UIKit
 /// patient, holding the paper, can catch a believable-but-wrong value.
 struct RecordResultView: View {
     @ObservedObject var viewModel: ResultsViewModel
+
+    /// Set when the form was opened from a report shared into You. The photo is
+    /// read as soon as a marker is picked, and the inbox item is removed on save.
+    var sharedReport: SharedReport? = nil
+    var sharedPhoto: UIImage? = nil
+
     @Environment(\.dismiss) private var dismiss
 
     /// Which marker is being recorded: one the app knows, or one typed in.
@@ -58,6 +64,23 @@ struct RecordResultView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let sharedPhoto {
+                    Section {
+                        HStack(spacing: 14) {
+                            Image(uiImage: sharedPhoto)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 64, height: 64)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            Text("Pick the marker you want below and we'll read it from this report.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    } header: {
+                        Text("Shared to You")
+                    }
+                }
+
                 Section("From your report") {
                     markerPicker
                     if markerChoice == .other {
@@ -195,6 +218,9 @@ struct RecordResultView: View {
         case .known(let marker):
             markerName = marker.name
             unit = marker.unit
+            if let sharedPhoto {
+                Task { await read(sharedPhoto) }  // the shared report is already here, read it straight away
+            }
         case .other:
             markerName = ""
             unit = ""
@@ -241,7 +267,8 @@ struct RecordResultView: View {
             rangeHighText: rangeHighText,
             collectedOn: collectedOn,
             orderingClinician: orderingClinician,
-            reportPhoto: reportPhoto
+            reportPhoto: reportPhoto,
+            fromSharedReport: sharedReport
         )
         if saved { dismiss() }
     }
@@ -251,7 +278,11 @@ struct RecordResultView: View {
     private var errorAlertBinding: Binding<Bool> {
         Binding(
             get: { viewModel.errorMessage != nil },
-            set: { if !$0 { viewModel.errorMessage = nil } }
+            set: { isShowing in
+                // Clear after this screen update finishes, SwiftUI refuses changes made mid-update.
+                guard !isShowing else { return }
+                DispatchQueue.main.async { viewModel.errorMessage = nil }
+            }
         )
     }
 }
