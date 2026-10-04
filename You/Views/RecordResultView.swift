@@ -25,12 +25,6 @@ struct RecordResultView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    /// Which marker is being recorded: one the app knows, or one typed in.
-    private enum MarkerChoice: Hashable {
-        case known(KnownMarker)
-        case other
-    }
-
     @State private var markerChoice: MarkerChoice?
     @State private var markerName: String = ""
     @State private var valueText: String = ""
@@ -155,21 +149,21 @@ struct RecordResultView: View {
 
     // MARK: - Pieces
 
-    /// The markers the app knows, grouped the way reports print them, plus "Other".
+    /// Opens the app's own marker list, styled like every other screen.
     private var markerPicker: some View {
-        Picker("Marker", selection: $markerChoice) {
-            ForEach(KnownMarker.Group.allCases, id: \.self) { group in
-                Section(group.rawValue) {
-                    ForEach(KnownMarker.all.filter { $0.group == group }) { marker in
-                        Text(marker.name).tag(MarkerChoice.known(marker) as MarkerChoice?)
-                    }
-                }
-            }
-            Section("Not listed") {
-                Text("Other, I'll type it in").tag(MarkerChoice.other as MarkerChoice?)
-            }
+        NavigationLink {
+            MarkerPickerView(choice: $markerChoice)
+        } label: {
+            LabeledContent("Marker", value: markerChoiceTitle)
         }
-        .pickerStyle(.navigationLink)
+    }
+
+    private var markerChoiceTitle: String {
+        switch markerChoice {
+        case .known(let marker): return marker.name
+        case .other: return "Other"
+        case nil: return "Choose"
+        }
     }
 
     /// Photograph the report, or pick a photo, and let the app read the numbers.
