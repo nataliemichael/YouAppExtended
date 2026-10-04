@@ -19,12 +19,18 @@ import WidgetKit
 ///   database becomes the single source of truth.
 final class CoreDataHealthRecordRepository: HealthRecordRepository {
     private let store: HealthRecordStore
+    private let photoStore: ReportPhotoStoring
     private var context: NSManagedObjectContext { store.context }
 
     /// The main app seeds sample records on first launch. The widget passes
     /// `seedsSampleRecords: false` because it only ever reads.
-    init(store: HealthRecordStore = HealthRecordStore(), seedsSampleRecords: Bool = true) {
+    init(
+        store: HealthRecordStore = HealthRecordStore(),
+        photoStore: ReportPhotoStoring = ReportPhotoStore(),
+        seedsSampleRecords: Bool = true
+    ) {
         self.store = store
+        self.photoStore = photoStore
         if seedsSampleRecords { seedIfEmpty() }
     }
 
@@ -55,6 +61,7 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
         stored.id = result.id
         stored.collectedOn = result.collectedOn
         stored.orderingClinician = result.orderingClinician
+        stored.reportPhotoFileName = result.reportPhotoFileName
         for reading in result.markers {
             let storedReading = StoredMarkerReading(context: context)
             storedReading.id = reading.id
@@ -96,7 +103,12 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
     func delete(_ result: PathologyResult) {
         let request = StoredPathologyResult.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", result.id as CVarArg)
-        fetch(request).forEach(context.delete)  // cascade removes its readings
+        for stored in fetch(request) {
+            if let fileName = stored.reportPhotoFileName {
+                photoStore.remove(fileName: fileName)  // the photo goes with the report
+            }
+            context.delete(stored)  // cascade removes its readings
+        }
         save()
     }
 
@@ -206,7 +218,8 @@ final class CoreDataHealthRecordRepository: HealthRecordRepository {
             id: id,
             collectedOn: collectedOn,
             orderingClinician: stored.orderingClinician ?? "",
-            markers: readings
+            markers: readings,
+            reportPhotoFileName: stored.reportPhotoFileName
         )
     }
 

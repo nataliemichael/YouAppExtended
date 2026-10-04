@@ -4,11 +4,16 @@
 //
 
 import SwiftUI
+import UIKit
 
 /// One pathology report in full: every marker with its healthy range and a plain-language explanation.
 /// Flagged markers are listed first because they are what the patient came to understand.
+/// When the result was read from a photo of the paper report, the photo is shown at the end.
 struct ResultDetailView: View {
     let result: PathologyResult
+    var reportPhoto: UIImage? = nil
+
+    @State private var isViewingPhoto = false
 
     /// Flagged markers first, then the rest.
     private var orderedMarkers: [MarkerReading] {
@@ -46,6 +51,25 @@ struct ResultDetailView: View {
                 }
             }
 
+            if let reportPhoto {
+                Section("Your report") {
+                    Button {
+                        isViewingPhoto = true
+                    } label: {
+                        Image(uiImage: reportPhoto)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: 220)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Photo of your report, tap to see it larger")
+                    Text("The photo this result was read from. It stays on your phone with the result.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             Section {
                 Text("This explains your results in plain language. It is not medical advice. Your GP is the right person to interpret what it means for you.")
                     .font(.footnote)
@@ -56,6 +80,11 @@ struct ResultDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
         .background(AppColours.sand)
+        .fullScreenCover(isPresented: $isViewingPhoto) {
+            if let reportPhoto {
+                ReportPhotoViewer(photo: reportPhoto)
+            }
+        }
     }
 
     private func statusLine(for reading: MarkerReading) -> String {
@@ -67,6 +96,31 @@ struct ResultDetailView: View {
             return "Below the healthy range (\(range.lowerBound.formatted())–\(range.upperBound.formatted())), worth raising with your GP"
         case .aboveRange:
             return "Above the healthy range (\(range.lowerBound.formatted())–\(range.upperBound.formatted())), worth raising with your GP"
+        }
+    }
+}
+
+/// The report photo on its own, large enough to read the paper.
+private struct ReportPhotoViewer: View {
+    let photo: UIImage
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView([.horizontal, .vertical]) {
+                Image(uiImage: photo)
+                    .resizable()
+                    .scaledToFit()
+                    .containerRelativeFrame([.horizontal, .vertical])
+            }
+            .background(Color.black)
+            .navigationTitle("Your report")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
         }
     }
 }

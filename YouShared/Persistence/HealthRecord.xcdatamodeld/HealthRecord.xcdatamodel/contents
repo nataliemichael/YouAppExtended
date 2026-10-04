@@ -22,6 +22,7 @@
         <attribute name="collectedOn" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="orderingClinician" optional="YES" attributeType="String"/>
+        <attribute name="reportPhotoFileName" optional="YES" attributeType="String"/>
         <relationship name="markers" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="StoredMarkerReading" inverseName="result" inverseEntity="StoredMarkerReading"/>
     </entity>
     <entity name="StoredReferral" representedClassName="StoredReferral" syncable="YES" codeGenerationType="class">

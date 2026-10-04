@@ -148,7 +148,7 @@ struct HomeView: View {
             .background(AppColours.sand)
             .contentMargins(.top, 0, for: .scrollContent)
             .navigationDestination(for: PathologyResult.self) { result in
-                ResultDetailView(result: result)
+                ResultDetailView(result: result, reportPhoto: resultsViewModel.reportPhoto(for: result))
             }
             .sheet(isPresented: $isAddingResult) {
                 RecordResultView(viewModel: resultsViewModel)

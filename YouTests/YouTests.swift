@@ -128,4 +128,54 @@ struct RecordPathologyResultUseCaseTests {
 
         #expect(repository.results.isEmpty)
     }
+
+    @Test func test_recordResult_explainsKnownMarker_fromTheCatalogue() throws {
+        let (useCase, _) = makeUseCase()
+
+        // Typed in lower case, still recognised as the ferritin the app knows.
+        let result = try useCase.execute(
+            markerName: "ferritin",
+            value: 9,
+            unit: "µg/L",
+            referenceRange: ferritinRange,
+            collectedOn: date(2026, 9, 1),
+            orderingClinician: "Dr Michael",
+            today: date(2026, 9, 3)
+        )
+
+        #expect(result.markers.first?.plainLanguageExplanation.hasPrefix("Ferritin shows how much iron") == true)
+    }
+
+    @Test func test_recordResult_pointsToGP_forMarkerTheAppDoesNotKnow() throws {
+        let (useCase, _) = makeUseCase()
+
+        let result = try useCase.execute(
+            markerName: "Zinc",
+            value: 15,
+            unit: "µmol/L",
+            referenceRange: ReferenceRange(lowerBound: 10, upperBound: 20),
+            collectedOn: date(2026, 9, 1),
+            orderingClinician: "Dr Michael",
+            today: date(2026, 9, 3)
+        )
+
+        #expect(result.markers.first?.plainLanguageExplanation.contains("Your GP can explain") == true)
+    }
+
+    @Test func test_recordResult_keepsReportPhoto_withTheSavedResult() throws {
+        let (useCase, repository) = makeUseCase()
+
+        try useCase.execute(
+            markerName: "Ferritin",
+            value: 9,
+            unit: "µg/L",
+            referenceRange: ferritinRange,
+            collectedOn: date(2026, 9, 1),
+            orderingClinician: "Dr Michael",
+            reportPhotoFileName: "report-1.jpg",
+            today: date(2026, 9, 3)
+        )
+
+        #expect(repository.results.first?.reportPhotoFileName == "report-1.jpg")
+    }
 }

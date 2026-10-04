@@ -52,6 +52,7 @@ struct RecordPathologyResultUseCase {
     static let plausibilityMultiplier: Double = 10
 
     /// Checks the entry against the business rules, then saves and returns the new result.
+    /// `reportPhotoFileName` names the photo the result was read from, if there was one.
     /// Throws a `RecordPathologyResultError` naming the first rule that fails.
     @discardableResult
     func execute(
@@ -61,6 +62,7 @@ struct RecordPathologyResultUseCase {
         referenceRange: ReferenceRange,
         collectedOn: Date,
         orderingClinician: String,
+        reportPhotoFileName: String? = nil,
         today: Date = Date()
     ) throws -> PathologyResult {
         guard referenceRange.lowerBound >= 0,
@@ -97,22 +99,16 @@ struct RecordPathologyResultUseCase {
         let result = PathologyResult(
             collectedOn: collectedOn,
             orderingClinician: orderingClinician,
-            markers: [reading]
+            markers: [reading],
+            reportPhotoFileName: reportPhotoFileName
         )
         repository.add(result)
         return result
     }
 
-    /// Everyday-words explanations for markers the app knows, with an honest
-    /// fallback for ones it doesn't. Educational only, never medical advice.
+    /// Everyday-words explanation from the marker catalogue, with an honest
+    /// fallback for markers the app doesn't know. Educational only, never medical advice.
     private static func explanation(for markerName: String) -> String {
-        let glossary: [String: String] = [
-            "ferritin": "Ferritin shows how much iron your body has stored. Low iron stores are a common reason for feeling tired or short of breath.",
-            "haemoglobin": "Haemoglobin is the part of your red blood cells that carries oxygen around your body.",
-            "vitamin d": "Vitamin D helps your body absorb calcium and keep bones and muscles strong. Most of it comes from sunlight.",
-            "tsh": "TSH tells your thyroid how hard to work. It is a common check when energy levels feel off."
-        ]
-        return glossary[markerName.lowercased()]
-            ?? "Your GP can explain what this marker measures and what your value means for you."
+        KnownMarker.explanation(for: markerName)
     }
 }
