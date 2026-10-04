@@ -52,6 +52,7 @@ struct RecordPathologyResultUseCase {
     static let plausibilityMultiplier: Double = 10
 
     /// Checks the entry against the business rules, then saves and returns the new result.
+    /// `reportPhotoFileName` names the photo the result was read from, if there was one.
     /// Throws a `RecordPathologyResultError` naming the first rule that fails.
     @discardableResult
     func execute(
@@ -61,6 +62,7 @@ struct RecordPathologyResultUseCase {
         referenceRange: ReferenceRange,
         collectedOn: Date,
         orderingClinician: String,
+        reportPhotoFileName: String? = nil,
         today: Date = Date()
     ) throws -> PathologyResult {
         guard referenceRange.lowerBound >= 0,
@@ -97,7 +99,8 @@ struct RecordPathologyResultUseCase {
         let result = PathologyResult(
             collectedOn: collectedOn,
             orderingClinician: orderingClinician,
-            markers: [reading]
+            markers: [reading],
+            reportPhotoFileName: reportPhotoFileName
         )
         repository.add(result)
         return result

@@ -7,7 +7,7 @@ import CoreData
 
 /// The App Group every part of You shares. The main app, the widget and the
 /// share extension all read the same identifier, so it lives in one place.
-enum AppGroup {
+nonisolated enum AppGroup {
     static let identifier = "group.com.nootnoot.You"
 
     /// The shared folder the App Group gives us, or nil outside the group

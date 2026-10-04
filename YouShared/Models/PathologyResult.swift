@@ -22,6 +22,10 @@ struct PathologyResult: Identifiable, Codable, Hashable {
     /// Every marker the lab measured in this report.
     let markers: [MarkerReading]
 
+    /// The photo of the paper report this result was read from, as a file name in
+    /// the shared photo folder. Nil when the patient typed the result in.
+    var reportPhotoFileName: String? = nil
+
     /// The readings outside their healthy range: the ones worth discussing at the patient's next appointment.
     var flaggedMarkers: [MarkerReading] {
         markers.filter(\.isFlagged)

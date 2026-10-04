@@ -38,6 +38,7 @@ struct RecordResultView: View {
     @State private var pickedPhoto: PhotosPickerItem?
     @State private var isReadingPhoto = false
     @State private var readLine: ReportLine?
+    @State private var reportPhoto: UIImage?  // kept with the result once it saves
 
     @State private var isConfirming = false
     @State private var errorTitle = "Couldn't save this result"
@@ -189,6 +190,7 @@ struct RecordResultView: View {
     /// Picking a marker fills the unit for them. Picking Other clears it to be typed.
     private func markerChosen(_ choice: MarkerChoice?) {
         readLine = nil
+        reportPhoto = nil
         switch choice {
         case .known(let marker):
             markerName = marker.name
@@ -221,6 +223,7 @@ struct RecordResultView: View {
 
         guard let line = await viewModel.readReport(for: marker, from: photo) else { return }
         readLine = line
+        reportPhoto = photo
         valueText = line.valueText
         if let low = line.rangeLowText, let high = line.rangeHighText {
             rangeLowText = low
@@ -237,7 +240,8 @@ struct RecordResultView: View {
             rangeLowText: rangeLowText,
             rangeHighText: rangeHighText,
             collectedOn: collectedOn,
-            orderingClinician: orderingClinician
+            orderingClinician: orderingClinician,
+            reportPhoto: reportPhoto
         )
         if saved { dismiss() }
     }

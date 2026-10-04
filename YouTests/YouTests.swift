@@ -161,4 +161,21 @@ struct RecordPathologyResultUseCaseTests {
 
         #expect(result.markers.first?.plainLanguageExplanation.contains("Your GP can explain") == true)
     }
+
+    @Test func test_recordResult_keepsReportPhoto_withTheSavedResult() throws {
+        let (useCase, repository) = makeUseCase()
+
+        try useCase.execute(
+            markerName: "Ferritin",
+            value: 9,
+            unit: "µg/L",
+            referenceRange: ferritinRange,
+            collectedOn: date(2026, 9, 1),
+            orderingClinician: "Dr Michael",
+            reportPhotoFileName: "report-1.jpg",
+            today: date(2026, 9, 3)
+        )
+
+        #expect(repository.results.first?.reportPhotoFileName == "report-1.jpg")
+    }
 }
