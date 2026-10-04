@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Lottie
 
 /// The first screen: a short "needs your attention" summary, then the patient's
@@ -13,6 +14,15 @@ struct HomeView: View {
     @ObservedObject var followUpsViewModel: FollowUpsViewModel
 
     @State private var isAddingResult = false
+    @State private var openedSharedReport: OpenedSharedReport?
+    @Environment(\.scenePhase) private var scenePhase
+
+    /// A shared report the patient tapped, with its photo ready for the form.
+    private struct OpenedSharedReport: Identifiable {
+        let report: SharedReport
+        let photo: UIImage
+        var id: String { report.id }
+    }
 
     /// The patient's first name, kept in UserDefaults. A display preference lives
     /// here; health records belong in the repository, not UserDefaults.
@@ -75,6 +85,14 @@ struct HomeView: View {
                     }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 0, leading: 10, bottom: 4, trailing: 20))
+                }
+
+                if !resultsViewModel.sharedReports.isEmpty {
+                    Section("Shared to You") {
+                        ForEach(resultsViewModel.sharedReports) { report in
+                            sharedReportRow(report)
+                        }
+                    }
                 }
 
                 if !attentionMarkers.isEmpty || openTaskCount > 0 {
@@ -153,6 +171,17 @@ struct HomeView: View {
             .sheet(isPresented: $isAddingResult) {
                 RecordResultView(viewModel: resultsViewModel)
             }
+            .sheet(item: $openedSharedReport) { opened in
+                RecordResultView(viewModel: resultsViewModel, sharedReport: opened.report, sharedPhoto: opened.photo)
+            }
+            .alert("Couldn't open that report", isPresented: sharedReportErrorBinding) {
+                Button("OK") {}
+            } message: {
+                Text(resultsViewModel.errorMessage ?? "")
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { resultsViewModel.load() }  // a report may have been shared in while we were away
+            }
             .alert("What should we call you?", isPresented: $isEditingName) {
                 TextField("Your name", text: $nameDraft)
                 Button("Save") {
@@ -167,6 +196,59 @@ struct HomeView: View {
                 followUpsViewModel.load()
             }
         }
+    }
+
+    /// One report waiting in the inbox: a thumbnail, when it arrived, and what to do.
+    private func sharedReportRow(_ report: SharedReport) -> some View {
+        Button {
+            if let photo = resultsViewModel.openSharedReport(report) {
+                openedSharedReport = OpenedSharedReport(report: report, photo: photo)
+            }
+        } label: {
+            HStack(spacing: 14) {
+                if let thumbnail = resultsViewModel.thumbnail(for: report) {
+                    Image(uiImage: thumbnail)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 56, height: 56)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                } else {
+                    Image(systemName: report.kind == .pdf ? "doc.richtext" : "photo")
+                        .font(.title2)
+                        .frame(width: 56, height: 56)
+                        .foregroundStyle(AppColours.stone)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Report shared \(report.receivedOn.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.headline)
+                    Text("Tap to record a result from it")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.footnote)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .buttonStyle(.plain)
+        .swipeActions {
+            Button("Delete", systemImage: "trash", role: .destructive) {
+                resultsViewModel.dismissSharedReport(report)
+            }
+            .tint(AppColours.warning)  // the app's own warning colour, not the system red
+        }
+    }
+
+    /// Shows the open error only while the form isn't up, and clears it after the update.
+    private var sharedReportErrorBinding: Binding<Bool> {
+        Binding(
+            get: { resultsViewModel.errorMessage != nil && openedSharedReport == nil && !isAddingResult },
+            set: { isShowing in
+                guard !isShowing else { return }
+                DispatchQueue.main.async { resultsViewModel.errorMessage = nil }
+            }
+        )
     }
 
     private func summaryLine(for result: PathologyResult) -> String {

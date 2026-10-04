@@ -81,7 +81,11 @@ struct AddReferralView: View {
     private var errorAlertBinding: Binding<Bool> {
         Binding(
             get: { viewModel.errorMessage != nil },
-            set: { if !$0 { viewModel.errorMessage = nil } }
+            set: { isShowing in
+                // Clear after this screen update finishes, SwiftUI refuses changes made mid-update.
+                guard !isShowing else { return }
+                DispatchQueue.main.async { viewModel.errorMessage = nil }
+            }
         )
     }
 }
