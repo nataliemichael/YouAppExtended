@@ -27,3 +27,14 @@ enum BrandFonts {
         .custom(handwritingName, size: size)
     }
 }
+
+extension View {
+    /// Section headings and prompts in the handwritten face, e.g. "Your results".
+    /// Kept in ink and never uppercased, so the handwriting stays readable.
+    func handwrittenHeading(size: CGFloat = 24) -> some View {
+        self
+            .font(BrandFonts.handwriting(size: size))
+            .foregroundStyle(AppColours.ink)
+            .textCase(nil)
+    }
+}

@@ -17,26 +17,68 @@ struct FollowUpsView: View {
         NavigationStack {
             List {
                 Section {
+                    // The brand heading, same shape as Home's "Hey / You."
+                    VStack(alignment: .leading, spacing: -4) {
+                        Text("Don't forget to")
+                            .font(BrandFonts.handwriting(size: 24))
+                            .foregroundStyle(AppColours.ink)
+                            .padding(.leading, 4)
+                        Text("Follow-up")
+                            .brandTitle(size: 56)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 10, bottom: 4, trailing: 20))
+                }
+
+                Section {
                     Button {
                         isAddingReferral = true
                     } label: {
                         HStack(spacing: 14) {
-                            Text("We'll keep track of referrals through To Do items. Tap here to add a referral!")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.leading)
-                            LottieView(animation: .named("MedicalReport"))
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("We'll keep track of your referrals")
+                                    .handwrittenHeading(size: 26)
+                                Text("Tap here to add a referral and we'll turn it into a task.")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .multilineTextAlignment(.leading)
+                            LottieView(animation: .named("SearchDoctor"))
                                 .looping()
-                                .frame(width: 150, height: 150)
+                                .frame(width: 120, height: 120)
                         }
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Track a new referral")
                     .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 10, bottom: 4, trailing: 20))
+                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
                 }
 
-                Section("Your referrals") {
+                Section {
+                    if viewModel.openTasks.isEmpty {
+                        Text("Nothing waiting, you're up to date.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(viewModel.openTasks) { task in
+                        taskRow(task)
+                    }
+                } header: {
+                    Text("To do").handwrittenHeading()
+                }
+
+                if !viewModel.completedTasks.isEmpty {
+                    Section {
+                        ForEach(viewModel.completedTasks) { task in
+                            taskRow(task)
+                        }
+                    } header: {
+                        Text("Done").handwrittenHeading()
+                    }
+                }
+
+                Section {
                     if viewModel.referrals.isEmpty {
                         Text("No referrals tracked yet. Add one and the app will remind you before it expires.")
                             .font(.subheadline)
@@ -61,25 +103,8 @@ struct FollowUpsView: View {
                         }
                         .padding(.vertical, 2)
                     }
-                }
-
-                Section("To do") {
-                    if viewModel.openTasks.isEmpty {
-                        Text("Nothing waiting, you're up to date.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    ForEach(viewModel.openTasks) { task in
-                        taskRow(task)
-                    }
-                }
-
-                if !viewModel.completedTasks.isEmpty {
-                    Section("Done") {
-                        ForEach(viewModel.completedTasks) { task in
-                            taskRow(task)
-                        }
-                    }
+                } header: {
+                    Text("Your referrals").handwrittenHeading()
                 }
             }
             .navigationTitle("")
@@ -87,14 +112,6 @@ struct FollowUpsView: View {
             .scrollContentBackground(.hidden)
             .background(AppColours.sand)
             .contentMargins(.top, 0, for: .scrollContent)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Text("Follow-ups")
-                        .brandTitle()
-                        .fixedSize(horizontal: true, vertical: false)
-                }
-                .sharedBackgroundVisibility(.hidden)
-            }
             .sheet(isPresented: $isAddingReferral) {
                 AddReferralView(viewModel: viewModel)
             }

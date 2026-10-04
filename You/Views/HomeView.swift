@@ -87,16 +87,8 @@ struct HomeView: View {
                     .listRowInsets(EdgeInsets(top: 0, leading: 10, bottom: 4, trailing: 20))
                 }
 
-                if !resultsViewModel.sharedReports.isEmpty {
-                    Section("Shared to You") {
-                        ForEach(resultsViewModel.sharedReports) { report in
-                            sharedReportRow(report)
-                        }
-                    }
-                }
-
                 if !attentionMarkers.isEmpty || openTaskCount > 0 {
-                    Section("Needs your attention") {
+                    Section {
                         if let next = followUpsViewModel.mostUrgentAction {
                             Label {
                                 Text("Next: \(next.patientAction), by \(next.actBy.formatted(date: .abbreviated, time: .omitted))")
@@ -123,10 +115,49 @@ struct HomeView: View {
                                     .foregroundStyle(AppColours.ink)
                             }
                         }
+                    } header: {
+                        Text("Needs your attention").handwrittenHeading()
                     }
                 }
 
-                Section("Your results") {
+                if !resultsViewModel.sharedReports.isEmpty {
+                    Section {
+                        ForEach(resultsViewModel.sharedReports) { report in
+                            sharedReportRow(report)
+                        }
+                    } header: {
+                        Text("Shared to You").handwrittenHeading()
+                    }
+                }
+
+                Section {
+                    Button {
+                        isAddingResult = true
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(alignment: .top, spacing: 10) {
+                                Text("Got a new blood test?")
+                                    .handwrittenHeading(size: 26)
+                                    .multilineTextAlignment(.leading)
+                                LottieView(animation: .named("ECG"))
+                                    .looping()
+                                    .frame(width: 140, height: 66)  // the heartbeat is wide and short, a tall frame leaves a gap
+                            }
+                            Text("Tap here to add a result from your report")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Add a result")
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                }
+
+                Section {
                     ForEach(resultsViewModel.results) { result in
                         NavigationLink(value: result) {
                             VStack(alignment: .leading, spacing: 4) {
@@ -138,26 +169,8 @@ struct HomeView: View {
                             }
                         }
                     }
-                }
-
-                Section {
-                    Button {
-                        isAddingResult = true
-                    } label: {
-                        HStack(spacing: 14) {
-                            Text("Got a new blood test? Tap here to add a result from your report!")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.leading)
-                            LottieView(animation: .named("ECG"))
-                                .looping()
-                                .frame(width: 140, height: 67)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Add a result")
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 20))
+                } header: {
+                    Text("Your results").handwrittenHeading()
                 }
             }
             .navigationTitle("")
