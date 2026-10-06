@@ -7,14 +7,15 @@ import SwiftUI
 import UIKit
 import Lottie
 
-/// The first screen: a short "needs your attention" summary, then the patient's
-/// pathology results newest first.
+/// The first screen: a greeting, what needs the patient's attention right now,
+/// reports shared in from other apps, and getting ready for the next GP visit.
+/// Results and follow-ups have their own tabs.
 struct HomeView: View {
     @ObservedObject var resultsViewModel: ResultsViewModel
     @ObservedObject var followUpsViewModel: FollowUpsViewModel
 
-    @State private var isAddingResult = false
     @State private var openedSharedReport: OpenedSharedReport?
+    @State private var isPreparingQuestions = false
     @Environment(\.scenePhase) private var scenePhase
 
     /// A shared report the patient tapped, with its photo ready for the form.
@@ -41,6 +42,10 @@ struct HomeView: View {
 
     private var openTaskCount: Int {
         followUpsViewModel.openTasks.count
+    }
+
+    private var hasSomethingToShow: Bool {
+        !attentionMarkers.isEmpty || openTaskCount > 0
     }
 
     var body: some View {
@@ -87,37 +92,40 @@ struct HomeView: View {
                     .listRowInsets(EdgeInsets(top: 0, leading: 10, bottom: 4, trailing: 20))
                 }
 
-                if !attentionMarkers.isEmpty || openTaskCount > 0 {
-                    Section {
-                        if let next = followUpsViewModel.mostUrgentAction {
-                            Label {
-                                Text("Next: \(next.patientAction), by \(next.actBy.formatted(date: .abbreviated, time: .omitted))")
-                            } icon: {
-                                Image(systemName: "arrow.forward.circle.fill")
-                                    .foregroundStyle(AppColours.ink)
-                            }
-                        }
-                        ForEach(attentionMarkers) { reading in
-                            Label {
-                                Text("\(reading.markerName) is outside the healthy range")
-                            } icon: {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .foregroundStyle(AppColours.warning)
-                            }
-                        }
-                        if openTaskCount > 0 {
-                            Label {
-                                Text(openTaskCount == 1
-                                    ? "1 task waiting in Follow-ups"
-                                    : "\(openTaskCount) tasks waiting in Follow-ups")
-                            } icon: {
-                                Image(systemName: "checklist")
-                                    .foregroundStyle(AppColours.ink)
-                            }
-                        }
-                    } header: {
-                        Text("Needs your attention").handwrittenHeading()
+                Section {
+                    if !hasSomethingToShow {
+                        Text("Nothing needs doing right now. Your results and follow-ups are in the tabs below.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
+                    if let next = followUpsViewModel.mostUrgentAction {
+                        Label {
+                            Text("Next: \(next.patientAction), by \(next.actBy.formatted(date: .abbreviated, time: .omitted))")
+                        } icon: {
+                            Image(systemName: "arrow.forward.circle.fill")
+                                .foregroundStyle(AppColours.ink)
+                        }
+                    }
+                    ForEach(attentionMarkers) { reading in
+                        Label {
+                            Text("\(reading.markerName) is outside the healthy range")
+                        } icon: {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .foregroundStyle(AppColours.warning)
+                        }
+                    }
+                    if openTaskCount > 0 {
+                        Label {
+                            Text(openTaskCount == 1
+                                ? "1 task waiting in Follow-ups"
+                                : "\(openTaskCount) tasks waiting in Follow-ups")
+                        } icon: {
+                            Image(systemName: "checklist")
+                                .foregroundStyle(AppColours.ink)
+                        }
+                    }
+                } header: {
+                    Text("Needs your attention").handwrittenHeading()
                 }
 
                 if !resultsViewModel.sharedReports.isEmpty {
@@ -132,45 +140,22 @@ struct HomeView: View {
 
                 Section {
                     Button {
-                        isAddingResult = true
+                        isPreparingQuestions = true
                     } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(alignment: .top, spacing: 10) {
-                                Text("Got a new blood test?")
-                                    .handwrittenHeading(size: 26)
-                                    .multilineTextAlignment(.leading)
-                                LottieView(animation: .named("ECG"))
-                                    .looping()
-                                    .frame(width: 140, height: 66)  // the heartbeat is wide and short, a tall frame leaves a gap
-                            }
-                            Text("Tap here to add a result from your report")
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Seeing your GP soon?")
+                                .handwrittenHeading(size: 26)
+                            Text("Tap here and we'll write your questions from your results.")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .multilineTextAlignment(.leading)
                         }
+                        .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Add a result")
+                    .accessibilityLabel("Prepare questions for your GP appointment")
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
-                }
-
-                Section {
-                    ForEach(resultsViewModel.results) { result in
-                        NavigationLink(value: result) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(result.collectedOn.formatted(date: .abbreviated, time: .omitted))
-                                    .font(.headline)
-                                Text(summaryLine(for: result))
-                                    .font(.subheadline)
-                                    .foregroundStyle(result.flaggedMarkers.isEmpty ? Color.secondary : AppColours.warning)
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Your results").handwrittenHeading()
                 }
             }
             .navigationTitle("")
@@ -178,14 +163,11 @@ struct HomeView: View {
             .scrollContentBackground(.hidden)
             .background(AppColours.sand)
             .contentMargins(.top, 0, for: .scrollContent)
-            .navigationDestination(for: PathologyResult.self) { result in
-                ResultDetailView(result: result, reportPhoto: resultsViewModel.reportPhoto(for: result))
-            }
-            .sheet(isPresented: $isAddingResult) {
-                RecordResultView(viewModel: resultsViewModel)
-            }
             .sheet(item: $openedSharedReport) { opened in
                 RecordResultView(viewModel: resultsViewModel, sharedReport: opened.report, sharedPhoto: opened.photo)
+            }
+            .sheet(isPresented: $isPreparingQuestions) {
+                AppointmentQuestionsView(viewModel: followUpsViewModel)
             }
             .alert("Couldn't open that report", isPresented: sharedReportErrorBinding) {
                 Button("OK") {}
@@ -253,24 +235,15 @@ struct HomeView: View {
         }
     }
 
-    /// Shows the open error only while the form isn't up, and clears it after the update.
+    /// Shows the open error only while a sheet isn't up, and clears it after the update.
     private var sharedReportErrorBinding: Binding<Bool> {
         Binding(
-            get: { resultsViewModel.errorMessage != nil && openedSharedReport == nil && !isAddingResult },
+            get: { resultsViewModel.errorMessage != nil && openedSharedReport == nil && !isPreparingQuestions },
             set: { isShowing in
                 guard !isShowing else { return }
                 DispatchQueue.main.async { resultsViewModel.errorMessage = nil }
             }
         )
-    }
-
-    private func summaryLine(for result: PathologyResult) -> String {
-        let flagged = result.flaggedMarkers
-        if flagged.isEmpty {
-            return "All \(result.markers.count) markers within healthy range"
-        }
-        let names = flagged.map(\.markerName).joined(separator: ", ")
-        return "\(names) outside healthy range"
     }
 }
 

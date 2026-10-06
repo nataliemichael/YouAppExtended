@@ -5,8 +5,9 @@
 
 import SwiftUI
 
-/// The app's two main areas: understanding results (Home) and acting on them (Follow-ups).
-/// Both tabs share the one record store through their ViewModels.
+/// The app's three areas: what needs attention now (Home), understanding results
+/// (Results) and acting on them (Follow-ups). All tabs share the one record store
+/// through their ViewModels.
 struct RootView: View {
     @StateObject private var resultsViewModel: ResultsViewModel
     @StateObject private var followUpsViewModel: FollowUpsViewModel
@@ -25,6 +26,11 @@ struct RootView: View {
             .tabItem {
                 Label("Home", systemImage: "heart.text.square")
             }
+
+            ResultsView(viewModel: resultsViewModel)
+                .tabItem {
+                    Label("Results", systemImage: "list.bullet.clipboard")
+                }
 
             FollowUpsView(viewModel: followUpsViewModel)
                 .tabItem {
