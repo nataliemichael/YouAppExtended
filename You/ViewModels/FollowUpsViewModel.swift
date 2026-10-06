@@ -6,9 +6,10 @@
 import Foundation
 import Combine
 
-/// Connects the Follow-ups screen to the record store and the referral use case.
+/// Connects the Follow-ups screen to the record store and its use cases.
 /// Screens read `referrals` and the task lists, ask `track(...)` to save a new
-/// referral, and tick tasks off through `toggleCompletion(of:)`.
+/// referral, tick tasks off through `toggleCompletion(of:)`, and ask
+/// `prepareQuestions(...)` to write GP questions from the patient's flagged results.
 @MainActor
 final class FollowUpsViewModel: ObservableObject {
     @Published private(set) var referrals: [Referral] = []
@@ -17,10 +18,12 @@ final class FollowUpsViewModel: ObservableObject {
 
     private let repository: HealthRecordRepository
     private let trackReferral: TrackReferralUseCase
+    private let prepareQuestionsUseCase: PrepareAppointmentQuestionsUseCase
 
     init(repository: HealthRecordRepository) {
         self.repository = repository
         self.trackReferral = TrackReferralUseCase(repository: repository)
+        self.prepareQuestionsUseCase = PrepareAppointmentQuestionsUseCase(repository: repository)
         load()
     }
 
@@ -70,6 +73,39 @@ final class FollowUpsViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             return false
         }
+    }
+
+    /// Writes the questions to ask at an appointment on `appointmentOn` from the
+    /// patient's flagged results. Returns nil when there is nothing to ask or the
+    /// date is wrong, in which case `errorMessage` explains why in the patient's words.
+    func prepareQuestions(appointmentOn: Date) -> AppointmentPrep? {
+        do {
+            return try prepareQuestionsUseCase.execute(appointmentOn: appointmentOn)
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+
+    /// Every reading of one marker across the patient's reports, oldest first, so
+    /// a question can be backed by "it has been dropping for three tests".
+    func readingHistory(for markerName: String) -> [MarkerReading] {
+        repository.readingHistory(forMarker: markerName)
+    }
+
+    /// Turns the prepared questions, plus any the patient wrote, into one follow-up
+    /// task due on the appointment day, so they show up on Follow-up, Home and the
+    /// Coming up widget.
+    func addToTasks(_ prep: AppointmentPrep, ownQuestions: [String] = []) {
+        let lines = prep.questions.map(\.question) + ownQuestions
+        let task = FollowUpTask(
+            title: "Take your questions to your GP appointment",
+            detail: lines.map { "• " + $0 }.joined(separator: "\n"),
+            dueOn: prep.appointmentOn,
+            referralID: nil
+        )
+        repository.add(task)
+        load()
     }
 
     /// Marks a task done today, or clears the completion if it was ticked by mistake.
