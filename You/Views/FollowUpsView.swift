@@ -12,7 +12,6 @@ struct FollowUpsView: View {
     @ObservedObject var viewModel: FollowUpsViewModel
 
     @State private var isAddingReferral = false
-    @State private var isPreparingQuestions = false
 
     var body: some View {
         NavigationStack {
@@ -52,26 +51,6 @@ struct FollowUpsView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Track a new referral")
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
-                }
-
-                Section {
-                    Button {
-                        isPreparingQuestions = true
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Seeing your GP soon?")
-                                .handwrittenHeading(size: 26)
-                            Text("Tap here and we'll write your questions from your results.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Prepare questions for your GP appointment")
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
                 }
@@ -135,9 +114,6 @@ struct FollowUpsView: View {
             .contentMargins(.top, 0, for: .scrollContent)
             .sheet(isPresented: $isAddingReferral) {
                 AddReferralView(viewModel: viewModel)
-            }
-            .sheet(isPresented: $isPreparingQuestions) {
-                AppointmentQuestionsView(viewModel: viewModel)
             }
             .onAppear {
                 viewModel.load()
