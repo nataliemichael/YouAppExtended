@@ -106,6 +106,7 @@ struct ComingUpWidgetView: View {
     /// The soonest thing: its countdown large, its name underneath, the wordmark in the corner.
     private var small: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // colours below are fixed, the sand background never changes with dark mode
             if let next = entry.lines.first {
                 countdown(for: next, size: 40)
                 Text(next.action)
@@ -131,17 +132,18 @@ struct ComingUpWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
+    /// The Home Screen sizes draw on the sand or the dark, so they fix their own
+    /// colours. The Lock Screen is left to the system, which tints it to the wallpaper.
     /// The medium is the dark one, split down the middle: the fortnight calendar on
     /// the left, the soonest thing with its countdown on the right, all in white.
     private var medium: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Coming up", systemImage: "bell")
                     .font(.footnote)
                     .fontWeight(.semibold)
                     .foregroundStyle(.white.opacity(0.75))
                 fortnightGrid
-                Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -167,40 +169,45 @@ struct ComingUpWidgetView: View {
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.75))
                 }
-                Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
-    /// The fortnight as a little calendar: weekday letters, then this week's dots
-    /// and next week's beneath, filled where something is due.
+    /// A little calendar covering the widget's look ahead window: weekday letters,
+    /// then the day numbers week by week. Days with something due sit on a filled
+    /// circle, coral when it is urgent. Today is bold.
     private var fortnightGrid: some View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: entry.date)
         let dueDays = Dictionary(grouping: entry.lines) { calendar.startOfDay(for: $0.actBy) }
-        return VStack(spacing: 6) {
+        let weeks = 4  // four weeks always, days past the look ahead window fade
+        return VStack(spacing: 5) {
             HStack(spacing: 0) {
                 ForEach(0..<7, id: \.self) { offset in
                     let day = calendar.date(byAdding: .day, value: offset, to: today) ?? today
                     Text(day.formatted(.dateTime.weekday(.narrow)))
-                        .font(.system(size: 11, weight: offset == 0 ? .bold : .regular, design: .rounded))
-                        .foregroundStyle(offset == 0 ? stripInk : stripInk.opacity(0.6))
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .foregroundStyle(stripInk.opacity(0.55))
                         .frame(maxWidth: .infinity)
                 }
             }
-            ForEach(0..<2, id: \.self) { week in
+            ForEach(0..<weeks, id: \.self) { week in
                 HStack(spacing: 0) {
                     ForEach(0..<7, id: \.self) { column in
                         let offset = week * 7 + column
                         let day = calendar.date(byAdding: .day, value: offset, to: today) ?? today
                         let due = dueDays[day]
-                        Circle()
-                            .fill(due == nil ? stripInk.opacity(0.25) : (due!.contains { $0.isUrgent } ? stripUrgent : stripInk))
-                            .frame(width: due == nil ? 6 : 12, height: due == nil ? 6 : 12)
+                        let inWindow = offset < entry.windowDays
+                        Text(day.formatted(.dateTime.day()))
+                            .font(.system(size: 11, weight: offset == 0 ? .bold : .medium, design: .rounded))
+                            .foregroundStyle(due == nil ? stripInk.opacity(inWindow ? 0.9 : 0.3) : (family == .systemMedium ? AppColours.ink : .white))
+                            .frame(width: 20, height: 20)
+                            .background(
+                                Circle().fill(due == nil ? Color.clear : (due!.contains { $0.isUrgent } ? stripUrgent : stripInk))
+                            )
                             .frame(maxWidth: .infinity)
-                            .frame(height: 14)
                     }
                 }
             }
@@ -211,24 +218,31 @@ struct ComingUpWidgetView: View {
     private var stripInk: Color { family == .systemMedium ? .white : AppColours.ink }
     private var stripUrgent: Color { family == .systemMedium ? AppColours.warningOnDark : AppColours.warning }
 
-    /// Readable without unlocking the phone: the countdown first, then the item.
+    /// Readable without unlocking the phone: the countdown first, then the item,
+    /// on the system's translucent pill and in the system's own tint so it reads
+    /// on any wallpaper.
     private var lockScreen: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            if let next = entry.lines.first {
-                Text(next.daysLeft > 1 ? "\(next.daysLeft) days" : next.daysLeftText)
-                    .font(.headline)
-                    .fontWeight(.bold)
-                Text(next.action)
-                    .font(.caption)
-                    .lineLimit(2)
-            } else {
-                Text("You.")
-                    .font(.headline)
-                Text(nothingDueText)
-                    .font(.caption)
+        ZStack {
+            VStack(alignment: .leading, spacing: 1) {
+                if let next = entry.lines.first {
+                    Text(next.daysLeft > 1 ? "\(next.daysLeft) days" : next.daysLeftText)
+                        .font(.system(.headline, design: .rounded))
+                        .fontWeight(.bold)
+                    Text(next.action)
+                        .font(.system(.caption, design: .rounded))
+                        .fontWeight(.semibold)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                } else {
+                    Text("You.")
+                        .font(.headline)
+                    Text(nothingDueText)
+                        .font(.caption)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .widgetAccentable()
     }
 
     // MARK: Pieces
@@ -311,7 +325,6 @@ struct ComingUpWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ComingUpConfiguration.self, provider: ComingUpProvider()) { entry in
             ComingUpWidgetView(entry: entry)
-                .environment(\.colorScheme, .light)
                 .containerBackground(for: .widget) {
                     WidgetBackdrop()
                 }
