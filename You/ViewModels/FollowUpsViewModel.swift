@@ -42,6 +42,15 @@ final class FollowUpsViewModel: ObservableObject {
         tasks.filter(\.isCompleted)
     }
 
+    /// How far ahead Home looks for things to do, matching the widget's default.
+    static let upcomingWindowDays = 14
+
+    /// Everything to do in the next fortnight, referrals to use and tasks to do,
+    /// soonest first. The same list the Coming up widget shows, so they always agree.
+    var upcomingActions: [PatientActionable] {
+        repository.careSchedule(withinDays: Self.upcomingWindowDays)
+    }
+
     /// The single most urgent thing the patient should do next, across referrals
     /// and tasks alike. `PatientActionable` lets one sort compare both kinds.
     var mostUrgentAction: PatientActionable? {

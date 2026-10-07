@@ -17,12 +17,13 @@ struct ScheduleLine: Identifiable {
 
     /// Coral when it is due within three days or already overdue.
     var isUrgent: Bool { daysLeft <= 3 }
+    var isOverdue: Bool { daysLeft < 0 }
 
     var daysLeftText: String {
         switch daysLeft {
-        case ..<0: return "overdue"
-        case 0: return "today"
-        case 1: return "tomorrow"
+        case ..<0: return "Overdue"
+        case 0: return "Today"
+        case 1: return "Tomorrow"
         default: return "\(daysLeft) days"
         }
     }
@@ -85,6 +86,8 @@ struct ComingUpProvider: AppIntentTimelineProvider {
 
 // MARK: - How it looks
 
+/// Deliberately quiet: one number you can read from across the room, the thing it
+/// belongs to, and nothing else competing with it.
 struct ComingUpWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: ComingUpEntry
@@ -100,69 +103,124 @@ struct ComingUpWidgetView: View {
         }
     }
 
-    /// The single soonest thing, with its countdown as the hero.
+    /// The soonest thing: its countdown large, its name underneath, the wordmark in the corner.
     private var small: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            header
-            Spacer(minLength: 0)
+        VStack(alignment: .leading, spacing: 0) {
             if let next = entry.lines.first {
-                Text(next.daysLeftText)
-                    .font(.system(.title, design: .rounded, weight: .bold))
-                    .foregroundStyle(tint(for: next))
-                    .minimumScaleFactor(0.7)
+                countdown(for: next, size: 40)
                 Text(next.action)
-                    .font(.subheadline)
+                    .font(.footnote)
                     .fontWeight(.medium)
-                    .lineLimit(3)
-                    .minimumScaleFactor(0.85)
+                    .foregroundStyle(AppColours.ink)
+                    .lineLimit(2)
+                    .padding(.top, 4)
+                Text(next.isOverdue
+                    ? "was due \(next.actBy.formatted(.dateTime.day().month(.abbreviated)))"
+                    : "by \(next.actBy.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))")
+                    .font(.caption2)
+                    .foregroundStyle(AppColours.stone)
+                    .padding(.top, 2)
             } else {
-                nothingDue
+                Text(nothingDueText)
+                    .font(.footnote)
+                    .foregroundStyle(AppColours.stone)
             }
             Spacer(minLength: 0)
-            flaggedLine
+            wordmark
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// The next three things, each with its countdown badge, spread to fill the widget.
+    /// The medium is the dark one, split down the middle: the fortnight calendar on
+    /// the left, the soonest thing with its countdown on the right, all in white.
     private var medium: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                header
-                Spacer()
-                flaggedLine
-            }
-            .padding(.bottom, 6)
-
-            if entry.lines.isEmpty {
-                nothingDue
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Coming up", systemImage: "bell")
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white.opacity(0.75))
+                fortnightGrid
                 Spacer(minLength: 0)
             }
-            ForEach(entry.lines.prefix(3)) { line in
-                HStack(spacing: 10) {
-                    countdownBadge(for: line)
-                    Text(line.action)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 2) {
+                if let next = entry.lines.first {
+                    countdown(for: next, size: 40,
+                              colour: next.isUrgent ? AppColours.warningOnDark : .white,
+                              unitColour: .white.opacity(0.75))
+                    Text(next.action)
+                        .font(.system(.subheadline, design: .rounded))
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                        .lineLimit(3)
+                        .padding(.top, 2)
+                    Text(next.isOverdue
+                        ? "was due \(next.actBy.formatted(.dateTime.day().month(.abbreviated)))"
+                        : "by \(next.actBy.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.6))
+                        .padding(.top, 2)
+                } else {
+                    Text(nothingDueText)
                         .font(.subheadline)
-                        .fontWeight(.medium)
-                        .lineLimit(2)  // long referral names wrap instead of cutting off
-                        .minimumScaleFactor(0.85)
-                    Spacer(minLength: 0)
+                        .foregroundStyle(.white.opacity(0.75))
                 }
-                .frame(maxHeight: .infinity)  // rows share the height evenly
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// Two lines readable without unlocking the phone.
+    /// The fortnight as a little calendar: weekday letters, then this week's dots
+    /// and next week's beneath, filled where something is due.
+    private var fortnightGrid: some View {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: entry.date)
+        let dueDays = Dictionary(grouping: entry.lines) { calendar.startOfDay(for: $0.actBy) }
+        return VStack(spacing: 6) {
+            HStack(spacing: 0) {
+                ForEach(0..<7, id: \.self) { offset in
+                    let day = calendar.date(byAdding: .day, value: offset, to: today) ?? today
+                    Text(day.formatted(.dateTime.weekday(.narrow)))
+                        .font(.system(size: 11, weight: offset == 0 ? .bold : .regular, design: .rounded))
+                        .foregroundStyle(offset == 0 ? stripInk : stripInk.opacity(0.6))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            ForEach(0..<2, id: \.self) { week in
+                HStack(spacing: 0) {
+                    ForEach(0..<7, id: \.self) { column in
+                        let offset = week * 7 + column
+                        let day = calendar.date(byAdding: .day, value: offset, to: today) ?? today
+                        let due = dueDays[day]
+                        Circle()
+                            .fill(due == nil ? stripInk.opacity(0.25) : (due!.contains { $0.isUrgent } ? stripUrgent : stripInk))
+                            .frame(width: due == nil ? 6 : 12, height: due == nil ? 6 : 12)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 14)
+                    }
+                }
+            }
+        }
+    }
+
+    /// The strip's colours: white on the dark medium, ink on the sand small.
+    private var stripInk: Color { family == .systemMedium ? .white : AppColours.ink }
+    private var stripUrgent: Color { family == .systemMedium ? AppColours.warningOnDark : AppColours.warning }
+
+    /// Readable without unlocking the phone: the countdown first, then the item.
     private var lockScreen: some View {
         VStack(alignment: .leading, spacing: 2) {
             if let next = entry.lines.first {
-                Text(next.action)
+                Text(next.daysLeft > 1 ? "\(next.daysLeft) days" : next.daysLeftText)
                     .font(.headline)
-                    .lineLimit(2)
-                Text("\(next.daysLeftText) · \(next.actBy.formatted(.dateTime.day().month(.abbreviated)))")
+                    .fontWeight(.bold)
+                Text(next.action)
                     .font(.caption)
+                    .lineLimit(2)
             } else {
                 Text("You.")
                     .font(.headline)
@@ -175,49 +233,73 @@ struct ComingUpWidgetView: View {
 
     // MARK: Pieces
 
-    private var header: some View {
-        Label("Coming up", systemImage: "calendar")
-            .font(.footnote)
-            .fontWeight(.bold)
-            .foregroundStyle(AppColours.ink)
-    }
-
-    /// "3 days" in a soft pill, coral when urgent.
-    private func countdownBadge(for line: ScheduleLine) -> some View {
-        Text(line.daysLeftText)
-            .font(.caption)
-            .fontWeight(.bold)
-            .foregroundStyle(tint(for: line))
-            .frame(width: 66)
-            .padding(.vertical, 5)
-            .background(tint(for: line).opacity(0.15), in: Capsule())
-    }
-
-    @ViewBuilder
-    private var flaggedLine: some View {
-        if entry.flaggedCount > 0 {
-            Label(
-                entry.flaggedCount == 1 ? "1 result flagged" : "\(entry.flaggedCount) results flagged",
-                systemImage: "exclamationmark.circle.fill"
-            )
-            .font(.caption2)
-            .fontWeight(.semibold)
-            .foregroundStyle(AppColours.warning)
+    /// "3 days" with the number in the app's condensed heading lettering, coral when urgent.
+    fileprivate func countdown(for line: ScheduleLine, size: CGFloat, colour: Color? = nil, unitColour: Color = AppColours.stone) -> some View {
+        let number = colour ?? tint(for: line)
+        // The heading lettering applied directly, so the colour passed in actually wins.
+        return HStack(alignment: .firstTextBaseline, spacing: 4) {
+            switch line.daysLeft {
+            case ..<0, 0, 1:
+                Text(line.daysLeftText)  // "Overdue", "Today", "Tomorrow"
+                    .font(.system(size: size * 0.5, weight: .bold, design: .rounded))
+                    .foregroundStyle(number)
+            default:
+                Text("\(line.daysLeft)")
+                    .font(.system(size: size, weight: .bold, design: .rounded))
+                    .foregroundStyle(number)
+                Text("days")
+                    .font(.system(.footnote, design: .rounded))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(unitColour)
+            }
         }
+        .minimumScaleFactor(0.7)
     }
 
-    private var nothingDue: some View {
-        Text(nothingDueText)
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+    /// The app's name, small, so the widget is recognisably You.
+    fileprivate var wordmark: some View {
+        Text("You.")
+            .brandTitle(size: 14)
+            .foregroundStyle(AppColours.stone)
     }
 
-    private func tint(for line: ScheduleLine) -> Color {
+    fileprivate func tint(for line: ScheduleLine) -> Color {
         line.isUrgent ? AppColours.warning : AppColours.ink
     }
 
     private var nothingDueText: String {
         "Nothing due in the next \(entry.windowDays) days."
+    }
+}
+
+/// The background each size gets: the clouds still on the Home Screen sizes,
+/// nothing on the Lock Screen (the system tints it).
+struct WidgetBackdrop: View {
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        switch family {
+        case .systemMedium: AppColours.ink.opacity(0.8)  // a shade lighter than the app's boxes
+        case .accessoryRectangular, .accessoryCircular, .accessoryInline: Color.clear
+        default: CloudsStill()
+        }
+    }
+}
+
+// MARK: - Style options, preview only until one is chosen
+
+/// Option 4, "Clouds": the current layout on a still of the drifting sand background.
+struct CloudsStill: View {
+    private let warm = Color(red: 0xF6 / 255, green: 0xEC / 255, blue: 0xDC / 255)
+    private let shade = Color(red: 0xD3 / 255, green: 0xC9 / 255, blue: 0xBA / 255)
+
+    var body: some View {
+        ZStack {
+            AppColours.sand
+            RadialGradient(colors: [warm, warm.opacity(0)], center: .init(x: 0.25, y: 0.2), startRadius: 0, endRadius: 150)
+            RadialGradient(colors: [shade, shade.opacity(0)], center: .init(x: 0.85, y: 0.7), startRadius: 0, endRadius: 150)
+            RadialGradient(colors: [warm, warm.opacity(0)], center: .init(x: 0.6, y: 1.0), startRadius: 0, endRadius: 110)
+        }
     }
 }
 
@@ -229,13 +311,9 @@ struct ComingUpWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ComingUpConfiguration.self, provider: ComingUpProvider()) { entry in
             ComingUpWidgetView(entry: entry)
-                .environment(\.colorScheme, .light)  // brand background is pale, keep text dark
+                .environment(\.colorScheme, .light)
                 .containerBackground(for: .widget) {
-                    LinearGradient(
-                        colors: [AppColours.sandLight, AppColours.sand],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+                    WidgetBackdrop()
                 }
         }
         .configurationDisplayName("Coming up")

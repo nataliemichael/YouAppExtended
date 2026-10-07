@@ -28,6 +28,9 @@ enum AppColours {
     /// something needs the patient's attention.
     static let warning = Color(red: 0xC4 / 255, green: 0x66 / 255, blue: 0x4B / 255)
 
+    /// The warning colour for text on the dark tiles, lifted so it stays readable.
+    static let warningOnDark = Color(red: 0xEC / 255, green: 0xA8 / 255, blue: 0x92 / 255)
+
     /// Completed tasks and the healthy part of a range bar.
     static let done = Color(red: 0x7E / 255, green: 0x8F / 255, blue: 0x6E / 255)
 }
