@@ -40,129 +40,55 @@ struct HomeView: View {
         resultsViewModel.results.first?.flaggedMarkers ?? []
     }
 
-    private var openTaskCount: Int {
-        followUpsViewModel.openTasks.count
-    }
-
     private var hasSomethingToShow: Bool {
-        !attentionMarkers.isEmpty || openTaskCount > 0
+        !attentionMarkers.isEmpty || !followUpsViewModel.upcomingActions.isEmpty
     }
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    VStack(alignment: .leading, spacing: 10) {
-                        // The brand heading with the waving figure beside it.
-                        HStack(alignment: .center, spacing: 8) {
-                            VStack(alignment: .leading, spacing: -4) {
-                                Text("Hey")
-                                    .font(BrandFonts.handwriting(size: 30))
-                                    .foregroundStyle(AppColours.ink)
-                                    .padding(.leading, 4)
-                                Text("You.")
-                                    .brandTitle(size: 56)
-                            }
-                            .accessibilityElement(children: .combine)
-                            LottieView(animation: .named("Waving"))
-                                .looping()
-                                .frame(width: 130, height: 112)
-                            Spacer(minLength: 0)
-                        }
+            ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                heading
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 18)  // a clear gap before the GP prompt
 
-                        // The greeting, tappable to set the patient's name.
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(greeting)
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .foregroundStyle(AppColours.ink)
-                            Text(patientFirstName.isEmpty
-                                ? "Tap here to tell us your name."
-                                : "Here's where your health is at today.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            nameDraft = patientFirstName
-                            isEditingName = true
-                        }
-                    }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 10, bottom: 4, trailing: 20))
-                }
-
-                Section {
-                    if !hasSomethingToShow {
-                        Text("Nothing needs doing right now. Your results and follow-ups are in the tabs below.")
+                Button {
+                    isPreparingQuestions = true
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Seeing your GP soon?")
+                            .handwrittenHeading(size: 26)
+                        Text("Tap here and we'll write your questions from your results.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    if let next = followUpsViewModel.mostUrgentAction {
-                        Label {
-                            Text("Next: \(next.patientAction), by \(next.actBy.formatted(date: .abbreviated, time: .omitted))")
-                        } icon: {
-                            Image(systemName: "arrow.forward.circle.fill")
-                                .foregroundStyle(AppColours.ink)
-                        }
-                    }
-                    ForEach(attentionMarkers) { reading in
-                        Label {
-                            Text("\(reading.markerName) is outside the healthy range")
-                        } icon: {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundStyle(AppColours.warning)
-                        }
-                    }
-                    if openTaskCount > 0 {
-                        Label {
-                            Text(openTaskCount == 1
-                                ? "1 task waiting in Follow-ups"
-                                : "\(openTaskCount) tasks waiting in Follow-ups")
-                        } icon: {
-                            Image(systemName: "checklist")
-                                .foregroundStyle(AppColours.ink)
-                        }
-                    }
-                } header: {
-                    Text("Needs your attention").handwrittenHeading()
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Prepare questions for your GP appointment")
+                .padding(.horizontal, 20)
+                .padding(.bottom, 10)  // the same breath the other tabs leave before their first box
 
+                attentionBox
                 if !resultsViewModel.sharedReports.isEmpty {
-                    Section {
-                        ForEach(resultsViewModel.sharedReports) { report in
-                            sharedReportRow(report)
-                        }
-                    } header: {
-                        Text("Shared to You").handwrittenHeading()
-                    }
+                    sharedBox
                 }
 
-                Section {
-                    Button {
-                        isPreparingQuestions = true
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Seeing your GP soon?")
-                                .handwrittenHeading(size: 26)
-                            Text("Tap here and we'll write your questions from your results.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Prepare questions for your GP appointment")
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
-                }
+                // The heartbeat, the app's quiet sign-off at the foot of every tab.
+                LottieView(animation: .named("Heartbeat"))
+                    .looping()
+                    .frame(width: 110, height: 110)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
             }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 8)
+            }
+            .scrollIndicators(.hidden)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .scrollContentBackground(.hidden)
-            .background(AppColours.sand)
-            .contentMargins(.top, 0, for: .scrollContent)
+            .background(DriftingSand())
             .sheet(item: $openedSharedReport) { opened in
                 RecordResultView(viewModel: resultsViewModel, sharedReport: opened.report, sharedPhoto: opened.photo)
             }
@@ -193,6 +119,94 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Heading
+
+    private var heading: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // The brand heading with the waving figure beside it.
+            HStack(alignment: .center, spacing: 8) {
+                VStack(alignment: .leading, spacing: -4) {
+                    Text("Hey")
+                        .font(BrandFonts.handwriting(size: 30))
+                        .foregroundStyle(AppColours.ink)
+                        .padding(.leading, 4)
+                    Text("You.")
+                        .brandTitle(size: 56)
+                }
+                .accessibilityElement(children: .combine)
+                LottieView(animation: .named("Waving"))
+                    .looping()
+                    .frame(width: 130, height: 112)
+                Spacer(minLength: 0)
+            }
+
+            // The greeting, tappable to set the patient's name.
+            VStack(alignment: .leading, spacing: 2) {
+                Text(greeting)
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundStyle(AppColours.ink)
+                Text(patientFirstName.isEmpty
+                    ? "Tap here to tell us your name."
+                    : "Here's where your health is at today.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                nameDraft = patientFirstName
+                isEditingName = true
+            }
+        }
+    }
+
+    // MARK: - Boxes, laid out like To do and Done on Follow-up
+
+    private var attentionBox: some View {
+        TileBox {
+            SectionLabel(title: "Needs your attention", systemImage: "bell")
+            if !hasSomethingToShow {
+                Text("Nothing needs doing right now. Your results and follow-ups are in the tabs below.")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.75))
+                    .padding(.horizontal, 4)
+            }
+            // Results outside their healthy range on the latest report
+            ForEach(attentionMarkers) { reading in
+                Label {
+                    Text("\(reading.markerName) is outside the healthy range")
+                } icon: {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundStyle(AppColours.warningOnDark)
+                }
+                .tileBackground()
+            }
+            // Referrals to use and tasks to do in the next fortnight, soonest first
+            ForEach(Array(followUpsViewModel.upcomingActions.enumerated()), id: \.offset) { _, action in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(action.patientAction)
+                        .font(.headline)
+                    Text(action.isOverdue(on: Date())
+                        ? "Was due \(action.actBy.formatted(date: .abbreviated, time: .omitted))"
+                        : "By \(action.actBy.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.subheadline)
+                        .foregroundStyle(AppColours.warningOnDark)
+                }
+                .tileBackground()
+            }
+        }
+    }
+
+    private var sharedBox: some View {
+        TileBox {
+            SectionLabel(title: "Shared to You", systemImage: "square.and.arrow.down")
+            ForEach(resultsViewModel.sharedReports) { report in
+                sharedReportRow(report)
+                    .tileBackground()
+            }
+        }
+    }
+
     /// One report waiting in the inbox: a thumbnail, when it arrived, and what to do.
     private func sharedReportRow(_ report: SharedReport) -> some View {
         Button {
@@ -211,28 +225,29 @@ struct HomeView: View {
                     Image(systemName: report.kind == .pdf ? "doc.richtext" : "photo")
                         .font(.title2)
                         .frame(width: 56, height: 56)
-                        .foregroundStyle(AppColours.stone)
+                        .tileSecondary()
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Report shared \(report.receivedOn.formatted(date: .abbreviated, time: .shortened))")
                         .font(.headline)
                     Text("Tap to record a result from it")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .tileSecondary()
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.footnote)
-                    .foregroundStyle(.tertiary)
+                Button {
+                    resultsViewModel.dismissSharedReport(report)
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.footnote)
+                        .foregroundStyle(AppColours.warning)
+                        .padding(8)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Delete this shared report")
             }
         }
         .buttonStyle(.plain)
-        .swipeActions {
-            Button("Delete", systemImage: "trash", role: .destructive) {
-                resultsViewModel.dismissSharedReport(report)
-            }
-            .tint(AppColours.warning)  // the app's own warning colour, not the system red
-        }
     }
 
     /// Shows the open error only while a sheet isn't up, and clears it after the update.

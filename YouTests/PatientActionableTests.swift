@@ -66,4 +66,19 @@ struct PatientActionableTests {
 
         #expect(viewModel.mostUrgentAction?.patientAction == "Use your referral: Dermatologist skin check")
     }
+
+    @MainActor
+    @Test func test_upcomingActions_listsOnlyTheNextFortnight_soonestFirst() {
+        let today = Date()
+        func days(_ n: Int) -> Date { Calendar.current.date(byAdding: .day, value: n, to: today)! }
+        let referral = Referral(kind: .pathology, purpose: "Iron studies re-check", issuedBy: "Dr Michael", issuedOn: days(-10), expiresOn: days(10))
+        let soonTask = FollowUpTask(title: "Book the blood test", detail: nil, dueOn: days(3), referralID: referral.id)
+        let farTask = FollowUpTask(title: "Annual check-up", detail: nil, dueOn: days(40), referralID: nil)
+        let repository = InMemoryHealthRecordRepository(results: [], referrals: [referral], followUpTasks: [soonTask, farTask])
+        let viewModel = FollowUpsViewModel(repository: repository)
+
+        let upcoming = viewModel.upcomingActions
+
+        #expect(upcoming.map(\.patientAction) == ["Book the blood test", "Use your referral: Iron studies re-check"])
+    }
 }
